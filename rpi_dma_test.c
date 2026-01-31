@@ -235,7 +235,7 @@ int main(int argc, char *argv[])
     printf("VC mem handle %u, phys %p, virt %p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
 
     // Run DMA tests
-    print("run tests");
+    printf("run tests");
     dma_test_mem_transfer();
     dma_test_led_flash(LED_PIN);
     dma_test_pwm_trigger(LED_PIN);
