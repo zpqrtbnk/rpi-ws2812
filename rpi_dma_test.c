@@ -63,8 +63,8 @@
 #define GPIO_SET0       0x1c
 #define GPIO_CLR0       0x28
 #define GPIO_LEV0       0x34
-#define VIRT_GPIO_REG(a) ((uint32_t *)((size_t)virt_gpio_regs + (a)))
-#define BUS_GPIO_REG(a) (GPIO_BASE-PHYS_REG_BASE+BUS_REG_BASE+(size_t)(a))
+#define VIRT_GPIO_REG(a) ((uint32_t *)((size_t)virt_gpio_regs + (size_t)(a)))
+#define BUS_GPIO_REG(a) (GPIO_BASE-PHYS_REG_BASE+BUS_REG_BASE + (size_t)(a))
 #define GPIO_IN         0
 #define GPIO_OUT        1
 #define GPIO_ALT0       4
@@ -121,7 +121,7 @@ typedef struct {
 #define DMA_NEXTCONBK   (DMA_CHAN*0x100 + 0x1c)
 #define DMA_DEBUG       (DMA_CHAN*0x100 + 0x20)
 #define DMA_ENABLE      0xff0
-#define VIRT_DMA_REG(a) ((volatile size_t *)((size_t)virt_dma_regs + a))
+#define VIRT_DMA_REG(a) ((volatile uint32_t *)((size_t)virt_dma_regs + a))
 char *dma_regstrs[] = {"DMA CS", "CB_AD", "TI", "SRCE_AD", "DEST_AD",
     "TFR_LEN", "STRIDE", "NEXT_CB", "DEBUG", ""};
 
@@ -155,8 +155,8 @@ void *virt_dma_mem;
 #define PWM_FIF1        0x18   // Channel 1 fifo
 #define PWM_RNG2        0x20   // Channel 2 range
 #define PWM_DAT2        0x24   // Channel 2 data
-#define VIRT_PWM_REG(a) ((volatile size_t *)((size_t)virt_pwm_regs + (a)))
-#define BUS_PWM_REG(a)  (PWM_BASE-PHYS_REG_BASE+BUS_REG_BASE+(size_t)(a))
+#define VIRT_PWM_REG(a) ((volatile uint32_t *)((size_t)virt_pwm_regs + (size_t)(a)))
+#define BUS_PWM_REG(a)  (PWM_BASE-PHYS_REG_BASE+BUS_REG_BASE + (size_t)(a))
 #define PWM_CTL_RPTL1   (1<<2)  // Chan 1: repeat last data when FIFO empty
 #define PWM_CTL_USEF1   (1<<5)  // Chan 1: use FIFO
 #define PWM_DMAC_ENAB   (1<<31) // Start PWM DMA
@@ -169,7 +169,7 @@ void *virt_clk_regs;
 #define CLK_BASE        (PHYS_REG_BASE + 0x101000)
 #define CLK_PWM_CTL     0xa0
 #define CLK_PWM_DIV     0xa4
-#define VIRT_CLK_REG(a) ((volatile size_t *)((size_t)virt_clk_regs + (a)))
+#define VIRT_CLK_REG(a) ((volatile uint32_t *)((size_t)virt_clk_regs + (size_t)(a)))
 #define CLK_PASSWD      0x5a000000
 #define CLOCK_KHZ       250000
 #define PWM_CLOCK_ID    0xa
