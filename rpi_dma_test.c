@@ -258,7 +258,7 @@ int dma_test_mem_transfer(void)
     *(srce+20) = 'e'; // works 1..4..20
     printf(".\n");
     char *s = "memory transfer OK";
-    for (int i = 0; i < 18, i++) *(srce+i) = s[i];
+    for (int i = 0; i < 18; i++) *(srce+i) = s[i];
     printf(".\n");
     strncpy(srce, s, 18); // FIXME bus error
     printf(".\n");
