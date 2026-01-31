@@ -14,7 +14,7 @@ smi_dac_test.c
 
 STATUS
 
-
+bin/dma-test segfaults
 
 RP3A0
 

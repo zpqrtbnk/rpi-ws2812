@@ -205,21 +205,28 @@ void stop_pwm(void);
 // Main program
 int main(int argc, char *argv[])
 {
+    print("dma-test");
+
     // Ensure cleanup if user hits ctrl-C
     signal(SIGINT, terminate);
 
     // Map GPIO, DMA and PWM registers into virtual mem (user space)
+    print("map segments");
     virt_gpio_regs = map_segment((void *)GPIO_BASE, PAGE_SIZE);
     virt_dma_regs = map_segment((void *)DMA_BASE, PAGE_SIZE);
     virt_pwm_regs = map_segment((void *)PWM_BASE, PAGE_SIZE);
     virt_clk_regs = map_segment((void *)CLK_BASE, PAGE_SIZE);
+
+    print("enable dma");
     enable_dma();
 
     // Set LED pin as output, and set high
+    print("setup gpio");
     gpio_mode(LED_PIN, GPIO_OUT);
     gpio_out(LED_PIN, 1);
 
     // Use mailbox to get uncached memory for DMA decriptors and buffers
+    print("use mailbox");
     mbox_fd = open_mbox();
     if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
         (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
@@ -228,9 +235,12 @@ int main(int argc, char *argv[])
     printf("VC mem handle %u, phys %p, virt %p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
 
     // Run DMA tests
+    print("run tests");
     dma_test_mem_transfer();
     dma_test_led_flash(LED_PIN);
     dma_test_pwm_trigger(LED_PIN);
+
+    print("terminate");
     terminate(0);
 }
 
