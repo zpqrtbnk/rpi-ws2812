@@ -36,3 +36,24 @@ do we need to know the current CPU speed?
 /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
 
 but it is changing w/ activity?
+
+GPIO addresses
+
+    0x 7e10 002c PADS (GPIO 0-27)
+
+    0x 7e10 0030 PADS (GPIO 28-45)
+
+    0x 7e10 0034 PADS (GPIO 46-53)
+
+A Peripheral is a hardware device with a specific address in memory that it writes data to and/or reads data from. All peripherals can be described by an offset from the Peripheral Base Address, which starts at 0x20000000 on the Raspberry Pi model 1, and at 0x0x3F000000 on the models 2 and 3.
+
+Peripheral Base Address and the GPIO Base Address?
+
+cat /proc/iomem
+3f200000.gpio gpio@7e200000
+
+peripheral base address is 3f000000
+
+The GPIO registers themselves are located at an offset from the peripheral base. For many models, the GPIO registers begin at an offset of 0x200000 from the peripheral base address.
+
+BUT ... the code we're using was 32b and we MUST bump it to 64 bits!

@@ -63,8 +63,8 @@
 #define GPIO_SET0       0x1c
 #define GPIO_CLR0       0x28
 #define GPIO_LEV0       0x34
-#define VIRT_GPIO_REG(a) ((uint32_t *)((uint32_t)virt_gpio_regs + (a)))
-#define BUS_GPIO_REG(a) (GPIO_BASE-PHYS_REG_BASE+BUS_REG_BASE+(uint32_t)(a))
+#define VIRT_GPIO_REG(a) ((size_t *)((size_t)virt_gpio_regs + (a)))
+#define BUS_GPIO_REG(a) (GPIO_BASE-PHYS_REG_BASE+BUS_REG_BASE+(size_t)(a))
 #define GPIO_IN         0
 #define GPIO_OUT        1
 #define GPIO_ALT0       4
@@ -80,7 +80,7 @@ int mbox_fd, dma_mem_h;
 void *bus_dma_mem;
 
 // Convert memory bus address to physical address (for mmap)
-#define BUS_PHYS_ADDR(a) ((void *)((uint32_t)(a)&~0xC0000000))
+#define BUS_PHYS_ADDR(a) ((void *)((size_t)(a)&~0xC0000000))
 
 // Videocore mailbox memory allocation flags, see:
 //     https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
@@ -121,7 +121,7 @@ typedef struct {
 #define DMA_NEXTCONBK   (DMA_CHAN*0x100 + 0x1c)
 #define DMA_DEBUG       (DMA_CHAN*0x100 + 0x20)
 #define DMA_ENABLE      0xff0
-#define VIRT_DMA_REG(a) ((volatile uint32_t *)((uint32_t)virt_dma_regs + a))
+#define VIRT_DMA_REG(a) ((volatile size_t *)((size_t)virt_dma_regs + a))
 char *dma_regstrs[] = {"DMA CS", "CB_AD", "TI", "SRCE_AD", "DEST_AD",
     "TFR_LEN", "STRIDE", "NEXT_CB", "DEBUG", ""};
 
@@ -143,7 +143,7 @@ typedef struct {
 void *virt_dma_mem;
 
 // Convert virtual DMA data address to a bus address
-#define BUS_DMA_MEM(a)  ((uint32_t)a-(uint32_t)virt_dma_mem+(uint32_t)bus_dma_mem)
+#define BUS_DMA_MEM(a)  ((size_t)a-(size_t)virt_dma_mem+(size_t)bus_dma_mem)
 
 // PWM controller
 #define PWM_BASE        (PHYS_REG_BASE + 0x20C000)
@@ -155,8 +155,8 @@ void *virt_dma_mem;
 #define PWM_FIF1        0x18   // Channel 1 fifo
 #define PWM_RNG2        0x20   // Channel 2 range
 #define PWM_DAT2        0x24   // Channel 2 data
-#define VIRT_PWM_REG(a) ((volatile uint32_t *)((uint32_t)virt_pwm_regs + (a)))
-#define BUS_PWM_REG(a)  (PWM_BASE-PHYS_REG_BASE+BUS_REG_BASE+(uint32_t)(a))
+#define VIRT_PWM_REG(a) ((volatile size_t *)((size_t)virt_pwm_regs + (a)))
+#define BUS_PWM_REG(a)  (PWM_BASE-PHYS_REG_BASE+BUS_REG_BASE+(size_t)(a))
 #define PWM_CTL_RPTL1   (1<<2)  // Chan 1: repeat last data when FIFO empty
 #define PWM_CTL_USEF1   (1<<5)  // Chan 1: use FIFO
 #define PWM_DMAC_ENAB   (1<<31) // Start PWM DMA
@@ -169,7 +169,7 @@ void *virt_clk_regs;
 #define CLK_BASE        (PHYS_REG_BASE + 0x101000)
 #define CLK_PWM_CTL     0xa0
 #define CLK_PWM_DIV     0xa4
-#define VIRT_CLK_REG(a) ((volatile uint32_t *)((uint32_t)virt_clk_regs + (a)))
+#define VIRT_CLK_REG(a) ((volatile size_t *)((size_t)virt_clk_regs + (a)))
 #define CLK_PASSWD      0x5a000000
 #define CLOCK_KHZ       250000
 #define PWM_CLOCK_ID    0xa
@@ -272,7 +272,7 @@ int dma_test_mem_transfer(void)
 void dma_test_led_flash(int pin)
 {
     DMA_CB *cbp=virt_dma_mem;
-    uint32_t *data = (uint32_t *)(cbp+1), n;
+    size_t *data = (size_t *)(cbp+1), n;
 
     printf("DMA test: flashing LED on GPIO pin %u\n", pin);
     memset(cbp, 0, sizeof(DMA_CB));
@@ -291,7 +291,7 @@ void dma_test_led_flash(int pin)
 void dma_test_pwm_trigger(int pin)
 {
     DMA_CB *cbs=virt_dma_mem;
-    uint32_t n, *pindata=(uint32_t *)(cbs+4), *pwmdata=pindata+1;
+    size_t n, *pindata=(size_t *)(cbs+4), *pwmdata=pindata+1;
 
     printf("DMA test: PWM trigger, ctrl-C to exit\n");
     memset(cbs, 0, sizeof(DMA_CB)*4);
@@ -342,21 +342,21 @@ void terminate(int sig)
 // Set input or output
 void gpio_mode(int pin, int mode)
 {
-    uint32_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin / 10, shift = (pin % 10) * 3;
+    size_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin / 10, shift = (pin % 10) * 3;
     *reg = (*reg & ~(7 << shift)) | (mode << shift);
 }
 
 // Set an O/P pin
 void gpio_out(int pin, int val)
 {
-    uint32_t *reg = VIRT_GPIO_REG(val ? GPIO_SET0 : GPIO_CLR0) + pin/32;
+    size_t *reg = VIRT_GPIO_REG(val ? GPIO_SET0 : GPIO_CLR0) + pin/32;
     *reg = 1 << (pin % 32);
 }
 
 // Get an I/P pin value
 uint8_t gpio_in(int pin)
 {
-    uint32_t *reg = VIRT_GPIO_REG(GPIO_LEV0) + pin/32;
+    size_t *reg = VIRT_GPIO_REG(GPIO_LEV0) + pin/32;
     return (((*reg) >> (pin % 32)) & 1);
 }
 
@@ -469,7 +469,7 @@ void *map_segment(void *addr, int size)
         PROT_WRITE|PROT_READ, // enable reading and writing
         MAP_SHARED, // shared with other processes
         fd, // file descriptor -> /dev/mem
-        (uint32_t)addr // offset
+        (size_t)addr // offset
     );
 
     close(fd);
@@ -479,7 +479,7 @@ void *map_segment(void *addr, int size)
 #endif
     if (mem == MAP_FAILED)
         FAIL("Error: can't map memory\n");
-    
+
     return(mem);
 }
 // Free mapped memory
@@ -517,7 +517,7 @@ void stop_dma(void)
 // Display DMA registers
 void disp_dma(void)
 {
-    uint32_t *p=(uint32_t *)VIRT_DMA_REG(DMA_CS);
+    size_t *p=(size_t *)VIRT_DMA_REG(DMA_CS);
     int i=0;
 
     while (dma_regstrs[i][0])
