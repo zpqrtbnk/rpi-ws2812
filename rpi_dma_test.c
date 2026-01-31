@@ -530,6 +530,7 @@ void start_dma(DMA_CB *cbp)
     *VIRT_DMA_REG(DMA_CS) = 2;       // Clear 'end' flag
     *VIRT_DMA_REG(DMA_DEBUG) = 7;    // Clear error bits
     *VIRT_DMA_REG(DMA_CS) = 1;       // Start DMA
+    printf("  started\n");
 }
 
 // Halt current DMA operation by resetting controller
@@ -552,6 +553,8 @@ void disp_dma(void)
         if (i%5==0 || dma_regstrs[i][0]==0)
             printf("\n");
     }
+
+    printf(".\n");
 }
 
 // ----- PWM -----
