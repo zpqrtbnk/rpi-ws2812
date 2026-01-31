@@ -17,12 +17,15 @@
 
 // Location of peripheral registers in physical memory
 #define PHYS_REG_BASE   PI_01_REG_BASE
+
 #define PI_01_REG_BASE  0x20000000  // Pi Zero or 1
 #define PI_23_REG_BASE  0x3F000000  // Pi 2 or 3
 #define PI_4_REG_BASE   0xFE000000  // Pi 4
+#define PI_Z2W_REG_BASE 0x00000000  // Pi Zero 2W
 
 //#define CLOCK_HZ      250000000   // Pi 2 - 4
 #define CLOCK_HZ        400000000   // Pi Zero
+#define CLOCK_HZ        000000000   // Pi Zero 2W
 
 // Location of peripheral registers in bus memory
 #define BUS_REG_BASE    0x7E000000
@@ -35,17 +38,18 @@
 
 // Size of memory page
 #define PAGE_SIZE       0x1000
+
 // Round up to nearest page
 #define PAGE_ROUNDUP(n) ((n)%PAGE_SIZE==0 ? (n) : ((n)+PAGE_SIZE)&~(PAGE_SIZE-1))
 
 // Structure for mapped peripheral or memory
 typedef struct {
-    int fd,         // File descriptor
-        h,          // Memory handle
-        size;       // Memory size
-    void *bus,      // Bus address
-        *virt,      // Virtual address
-        *phys;      // Physical address
+    int  fd;      // File descriptor
+    int  h;       // Memory handle
+    int  size;    // Memory size
+    void *bus;    // Bus address
+    void *virt;   // Virtual address
+    void *phys;   // Physical address
 } MEM_MAP;
 
 // Get virtual 8 and 32-bit pointers to register

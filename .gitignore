@@ -1,6 +1,3 @@
 *.o
 *.swp
-rpi_adc_dma_test
-rpi_pixleds
-rpi_smi_adc_test
-rpi_smi_dac_test
+bin/
