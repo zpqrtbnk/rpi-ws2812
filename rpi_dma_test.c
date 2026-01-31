@@ -205,28 +205,30 @@ void stop_pwm(void);
 // Main program
 int main(int argc, char *argv[])
 {
-    printf("dma-test");
+    printf("dma-test\n");
+
+
 
     // Ensure cleanup if user hits ctrl-C
     signal(SIGINT, terminate);
 
     // Map GPIO, DMA and PWM registers into virtual mem (user space)
-    printf("map segments");
+    printf("map segments\n");
     virt_gpio_regs = map_segment((void *)GPIO_BASE, PAGE_SIZE);
     virt_dma_regs = map_segment((void *)DMA_BASE, PAGE_SIZE);
     virt_pwm_regs = map_segment((void *)PWM_BASE, PAGE_SIZE);
     virt_clk_regs = map_segment((void *)CLK_BASE, PAGE_SIZE);
 
-    printf("enable dma");
+    printf("enable dma\n");
     enable_dma();
 
     // Set LED pin as output, and set high
-    printf("setup gpio");
+    printf("setup gpio\n");
     gpio_mode(LED_PIN, GPIO_OUT);
     gpio_out(LED_PIN, 1);
 
     // Use mailbox to get uncached memory for DMA decriptors and buffers
-    printf("use mailbox");
+    printf("use mailbox\n");
     mbox_fd = open_mbox();
     if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
         (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
@@ -235,12 +237,12 @@ int main(int argc, char *argv[])
     printf("VC mem handle %u, phys %p, virt %p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
 
     // Run DMA tests
-    printf("run tests");
+    printf("run tests\n");
     dma_test_mem_transfer();
     dma_test_led_flash(LED_PIN);
     dma_test_pwm_trigger(LED_PIN);
 
-    printf("terminate");
+    printf("terminate\n");
     terminate(0);
 }
 
@@ -456,15 +458,28 @@ void *map_segment(void *addr, int size)
     void *mem;
 
     size = PAGE_ROUNDUP(size);
+    printf("mapping %d at %p\n", size, (void *)addr);
+
     if ((fd = open ("/dev/mem", O_RDWR|O_SYNC|O_CLOEXEC)) < 0)
         FAIL("Error: can't open /dev/mem, run using sudo\n");
-    mem = mmap(0, size, PROT_WRITE|PROT_READ, MAP_SHARED, fd, (uint32_t)addr);
+
+    mem = mmap(
+        0, // any address in our space will do
+        size, // block size
+        PROT_WRITE|PROT_READ, // enable reading and writing
+        MAP_SHARED, // shared with other processes
+        fd, // file descriptor -> /dev/mem
+        (uint32_t)addr // offset
+    );
+
     close(fd);
+
 #if DEBUG
-    printf("Map %p -> %p\n", (void *)addr, mem);
+    printf("mapped %p -> %p\n", (void *)addr, mem);
 #endif
     if (mem == MAP_FAILED)
         FAIL("Error: can't map memory\n");
+    
     return(mem);
 }
 // Free mapped memory
