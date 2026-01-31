@@ -97,6 +97,99 @@ typedef enum {
 // VC flags for unchached DMA memory
 #define DMA_MEM_FLAGS (MEM_FLAG_DIRECT|MEM_FLAG_ZERO)
 
+
+/*
+see https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
+
+Buffer contents:
+
+    u32: buffer size in bytes (including the header values, the end tag and padding)
+    u32: buffer request/response code
+        Request codes:
+            0x00000000: process request
+            All other values reserved
+        Response codes:
+            0x80000000: request successful
+            0x80000001: error parsing request buffer (partial response)
+            All other values reserved
+    u8...: sequence of concatenated tags
+    u32: 0x0 (end tag)
+    u8...: padding
+
+Tag format:
+
+    u32: tag identifier
+    u32: value buffer size in bytes
+    u32:
+        Request codes:
+            b31 clear: request
+            b30-b0: reserved
+        Response codes:
+            b31 set: response
+            b30-b0: value length in bytes
+    u8...: value buffer
+    u8...: padding to align the tag to 32 bits.
+
+Allocate Memory
+
+    Allocates contiguous memory on the GPU. size and alignment are in bytes.
+
+    Tag: 0x0003000c
+    Request:
+        Length: 12
+        Value:
+            u32: size
+            u32: alignment
+            u32: flags
+    Response:
+        Length: 4
+        Value:
+            u32: handle
+
+Lock memory
+
+    Lock buffer in place, and return a bus address. Must be done before memory can be accessed. bus address != 0 is success.
+
+    Tag: 0x0003000d
+    Request:
+        Length: 4
+        Value:
+            u32: handle
+    Response:
+        Length: 4
+        Value:
+            u32: bus address
+
+Unlock memory
+
+    Unlock buffer. It retains contents, but may move. Needs to be locked before next use. status=0 is success.
+
+    Tag: 0x0003000e
+    Request:
+        Length: 4
+        Value:
+            u32: handle
+    Response:
+        Length: 4
+        Value:
+            u32: status
+
+Release Memory
+
+    Free the memory buffer. status=0 is success.
+
+    Tag: 0x0003000f
+    Request:
+        Length: 4
+        Value:
+            u32: handle
+    Response:
+        Length: 4
+        Value:
+            u32: status
+
+*/
+
 // Mailbox command/response structure
 typedef struct {
     uint32_t len,   // Overall length (bytes)
@@ -214,9 +307,9 @@ int main(int argc, char *argv[])
     // Map GPIO, DMA and PWM registers into virtual mem (user space)
     printf("map segments\n");
     virt_gpio_regs = map_segment((void *)GPIO_BASE, PAGE_SIZE);
-    virt_dma_regs = map_segment((void *)DMA_BASE, PAGE_SIZE);
-    virt_pwm_regs = map_segment((void *)PWM_BASE, PAGE_SIZE);
-    virt_clk_regs = map_segment((void *)CLK_BASE, PAGE_SIZE);
+    virt_dma_regs  = map_segment((void *)DMA_BASE,  PAGE_SIZE);
+    virt_pwm_regs  = map_segment((void *)PWM_BASE,  PAGE_SIZE);
+    virt_clk_regs  = map_segment((void *)CLK_BASE,  PAGE_SIZE);
 
     printf("enable dma\n");
     enable_dma();
@@ -241,6 +334,7 @@ int main(int argc, char *argv[])
     dma_test_led_flash(LED_PIN);
     dma_test_pwm_trigger(LED_PIN);
 
+    // Over and out
     printf("terminate\n");
     terminate(0);
 }
@@ -420,8 +514,7 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp)
 {
     uint32_t ret=0, i;
 
-    for (i=msgp->dlen/4; i<=msgp->blen/4; i+=4)
-        msgp->uints[i++] = 0;
+    for (i = msgp->dlen / 4; i <= msgp->blen / 4; i += 4) msgp->uints[i++] = 0;
     msgp->len = (msgp->blen + 6) * 4;
     msgp->req = 0;
     if (ioctl(fd, _IOWR(100, 0, void *), msgp) < 0)
@@ -448,13 +541,15 @@ uint32_t alloc_vc_mem(int fd, uint32_t size, VC_ALLOC_FLAGS flags)
     return(msg_mbox(fd, &msg));
 }
 // Lock allocated memory, return bus address
-void *lock_vc_mem(int fd, int h)
+//void *lock_vc_mem(int fd, int h)
+uint32_t lock_vc_mem(int fd, int h)
 {
     printf("lock vc mem\n");
     VC_MSG msg={.tag=0x3000d, .blen=4, .dlen=4, .uints={h}};
     // FIXME warning: cast to pointer from integer of different size ??
     // msg_box returns uint32_t that we cast into a (void *) which is 64 bits??
-    return(h ? (void *)msg_mbox(fd, &msg) : 0);
+    //return(h ? (void *)msg_mbox(fd, &msg) : 0);
+    return(h ? msg_mbox(fd, &msg) : 0);
 }
 // Unlock allocated memory
 uint32_t unlock_vc_mem(int fd, int h)
