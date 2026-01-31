@@ -275,8 +275,17 @@ int dma_test_mem_transfer(void)
 
     disp_dma();
 
-    printf("DMA test: %s\n", dest[0] ? dest : "failed");
-    return(dest[0] != 0);
+    // FIXME bus error? string issues?
+    //printf("DMA test: %s\n", dest[0] ? dest : "failed");
+    //return(dest[0] != 0);
+
+    char ddest[128];
+    int i;
+    for (i = 0; i < 128 && *(dest+i) != 0; i++) ddest[i] = *(dest+i);
+    ddest[i] = 0;
+
+    printf("DMA test: %s\n", ddest[0] ? dest : "failed");
+    return(ddest[0] != 0);
 }
 
 // DMA memory-to-GPIO test: flash LED
