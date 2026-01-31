@@ -407,7 +407,7 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp)
 
     disp_vc_msg(msgp);
 
-    return(ret);
+    return ret;
 }
 
 // Allocate memory on PAGE_SIZE boundary, return handle
@@ -532,7 +532,7 @@ void disp_dma(void)
 
     while (dma_regstrs[i][0])
     {
-        printf("%-7s %08X ", dma_regstrs[i++], *p++);
+        printf("%-7s %08lX ", dma_regstrs[i++], *p++);
         if (i%5==0 || dma_regstrs[i][0]==0)
             printf("\n");
     }
