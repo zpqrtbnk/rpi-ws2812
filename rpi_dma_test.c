@@ -232,7 +232,7 @@ int main(int argc, char *argv[])
         (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
         (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)
             FAIL("Error: can't allocate uncached memory\n");
-    printf("VC mem handle %u, phys %p, virt %p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
+    printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
 
     // Run DMA tests
     printf("run tests\n");
@@ -253,7 +253,7 @@ int dma_test_mem_transfer(void)
     char *dest = srce + 0x100;
 
     printf("xxx\n");
-    strcpy(srce, "memory transfer OK");
+    strcpy(srce, "memory transfer OK"); // FIXME bus error
     printf("xxx\n");
     memset(cbp, 0, sizeof(DMA_CB));
     printf("xxx\n");
@@ -397,14 +397,15 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp)
     msgp->len = (msgp->blen + 6) * 4;
     msgp->req = 0;
     if (ioctl(fd, _IOWR(100, 0, void *), msgp) < 0)
-        printf("VC IOCTL failed\n");
+        printf("vc ioctl failed\n");
     else if ((msgp->req&0x80000000) == 0)
-        printf("VC IOCTL error\n");
+        printf("vc ioctl error\n");
     else if (msgp->req == 0x80000001)
-        printf("VC IOCTL partial error\n");
+        printf("vc ioctl partial error\n");
     else
         ret = msgp->uints[0];
 
+    printf("msg mbox: ");
     disp_vc_msg(msgp);
 
     return ret;
@@ -413,6 +414,7 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp)
 // Allocate memory on PAGE_SIZE boundary, return handle
 uint32_t alloc_vc_mem(int fd, uint32_t size, VC_ALLOC_FLAGS flags)
 {
+    printf("alloc vc mem\n");
     VC_MSG msg={.tag=0x3000c, .blen=12, .dlen=12,
         .uints={PAGE_ROUNDUP(size), PAGE_SIZE, flags}};
     return(msg_mbox(fd, &msg));
@@ -420,18 +422,23 @@ uint32_t alloc_vc_mem(int fd, uint32_t size, VC_ALLOC_FLAGS flags)
 // Lock allocated memory, return bus address
 void *lock_vc_mem(int fd, int h)
 {
+    printf("lock vc mem\n");
     VC_MSG msg={.tag=0x3000d, .blen=4, .dlen=4, .uints={h}};
+    // FIXME warning: cast to pointer from integer of different size ??
+    // msg_box returns uint32_t that we cast into a (void *) which is 64 bits??
     return(h ? (void *)msg_mbox(fd, &msg) : 0);
 }
 // Unlock allocated memory
 uint32_t unlock_vc_mem(int fd, int h)
 {
+    printf("unlock vc mem\n");
     VC_MSG msg={.tag=0x3000e, .blen=4, .dlen=4, .uints={h}};
     return(h ? msg_mbox(fd, &msg) : 0);
 }
 // Free memory
 uint32_t free_vc_mem(int fd, int h)
 {
+    printf("free vc mem\n");
     VC_MSG msg={.tag=0x3000f, .blen=4, .dlen=4, .uints={h}};
     return(h ? msg_mbox(fd, &msg) : 0);
 }
@@ -451,7 +458,7 @@ void disp_vc_msg(VC_MSG *msgp)
 {
     int i;
 
-    printf("VC msg len=%X, req=%X, tag=%X, blen=%x, dlen=%x, data ",
+    printf("vc msg len=%X, req=%X, tag=%X, blen=%x, dlen=%x, data ",
         msgp->len, msgp->req, msgp->tag, msgp->blen, msgp->dlen);
     for (i=0; i<msgp->blen/4; i++)
         printf("%08X ", msgp->uints[i]);
@@ -478,17 +485,17 @@ void *map_segment(void *addr, int size)
         PROT_WRITE|PROT_READ, // enable reading and writing
         MAP_SHARED, // shared with other processes
         fd, // file descriptor -> /dev/mem
-        (size_t)addr // offset
+        (size_t) addr // offset
     );
 
     close(fd);
 
-    printf("mapped %p -> %p\n", (void *)addr, mem);
+    printf("  mapped %p -> %p\n", (void *)addr, mem);
 
     if (mem == MAP_FAILED)
         FAIL("Error: can't map memory\n");
 
-    return(mem);
+    return mem;
 }
 // Free mapped memory
 void unmap_segment(void *mem, int size)
