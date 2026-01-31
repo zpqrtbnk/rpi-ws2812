@@ -201,6 +201,7 @@ void disp_dma(void);
 void init_pwm(int freq);
 void start_pwm(void);
 void stop_pwm(void);
+void strxcpy(char *src, char *dst, int len);
 
 // Main program
 int main(int argc, char *argv[])
@@ -281,13 +282,21 @@ int dma_test_mem_transfer(void)
 
     printf("copy\n");
     char ddest[128];
-    int i;
-    for (i = 0; i < 128 && *(dest+i) != 0; i++) ddest[i] = *(dest+i);
-    ddest[i] = 0;
+    strxcpy(dest, ddest, 128);
+    // int i;
+    // for (i = 0; i < 128 && *(dest+i) != 0; i++) ddest[i] = *(dest+i);
+    // ddest[i] = 0;
 
     printf("result\n");
     printf("DMA test: %s\n", ddest[0] ? ddest : "failed");
     return(ddest[0] != 0);
+}
+
+void strxcpy(char *src, char *dst, int len)
+{
+    int i = 0;
+    for (; i < len && *(src+i) != 0; i++) *(dst+i) = *(src+i);
+    for (; i < len; i++) *(dst+i) = 0;
 }
 
 // DMA memory-to-GPIO test: flash LED
