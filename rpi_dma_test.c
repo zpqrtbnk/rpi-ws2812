@@ -63,7 +63,7 @@
 #define GPIO_SET0       0x1c
 #define GPIO_CLR0       0x28
 #define GPIO_LEV0       0x34
-#define VIRT_GPIO_REG(a) ((size_t *)((size_t)virt_gpio_regs + (a)))
+#define VIRT_GPIO_REG(a) ((uint32_t *)((size_t)virt_gpio_regs + (a)))
 #define BUS_GPIO_REG(a) (GPIO_BASE-PHYS_REG_BASE+BUS_REG_BASE+(size_t)(a))
 #define GPIO_IN         0
 #define GPIO_OUT        1
