@@ -475,9 +475,8 @@ void *map_segment(void *addr, int size)
 
     close(fd);
 
-#if DEBUG
     printf("mapped %p -> %p\n", (void *)addr, mem);
-#endif
+
     if (mem == MAP_FAILED)
         FAIL("Error: can't map memory\n");
 
