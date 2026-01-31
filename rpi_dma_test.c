@@ -254,8 +254,12 @@ int dma_test_mem_transfer(void)
 
     printf("xxx\n");
     printf("copy to %p\n", srce);
-    *srce = 0;
+    *srce = 0; // works
     printf("copy to %p\n", srce);
+    *(srce+0) = 'm'; // works
+    *(srce+1) = 'e'; // works
+    *(srce+2) = 'm'; // works
+    *(srce+3) = 'o'; // works
     strcpy(srce, "memory transfer OK"); // FIXME bus error
     printf("xxx\n");
     memset(cbp, 0, sizeof(DMA_CB));
