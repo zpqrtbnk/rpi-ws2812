@@ -253,20 +253,21 @@ int dma_test_mem_transfer(void)
     char *srce = (char *)(cbp+1);
     char *dest = srce + 0x100;
 
-    printf("copy to %p\n", srce);
-    *(srce+0) = 'm'; // works
-    printf(".\n");
-    *(srce+20) = 'e'; // works 1..4..20
-    printf(".\n");
-    char *s = "memory transfer OK";
-    for (int i = 0; i < 19; i++) *(srce+i) = s[i]; // works ?? 19 for \0
-    printf(".\n");
+    // printf("copy to %p\n", srce);
+    // *(srce+0) = 'm'; // works
+    // printf(".\n");
+    // *(srce+20) = 'e'; // works 1..4..20
+    // printf(".\n");
+    // char *s = "memory transfer OK";
+    // for (int i = 0; i < 19; i++) *(srce+i) = s[i]; // works ?? 19 for \0
+    // printf(".\n");
     //strncpy(srce, s, 18); // FIXME bus error
     //printf(".\n");
     //strcpy(srce, "memory transfer OK"); // FIXME bus error
     //printf("xxx\n");
+
+    strxcpy("memory transfer OK", srce, 20);
     memset(cbp, 0, sizeof(DMA_CB));
-    printf("xxx\n");
     cbp->ti = DMA_CB_SRC_INC | DMA_CB_DEST_INC;
     cbp->srce_ad = BUS_DMA_MEM(srce);
     cbp->dest_ad = BUS_DMA_MEM(dest);
@@ -283,9 +284,6 @@ int dma_test_mem_transfer(void)
     printf("copy\n");
     char ddest[128];
     strxcpy(dest, ddest, 128);
-    // int i;
-    // for (i = 0; i < 128 && *(dest+i) != 0; i++) ddest[i] = *(dest+i);
-    // ddest[i] = 0;
 
     printf("result\n");
     printf("DMA test: %s\n", ddest[0] ? ddest : "failed");
@@ -294,6 +292,7 @@ int dma_test_mem_transfer(void)
 
 void strxcpy(char *src, char *dst, int len)
 {
+    // for alignment (?) reasons strcpy and strncpy bus-err on string access
     int i = 0;
     for (; i < len && *(src+i) != 0; i++) *(dst+i) = *(src+i);
     for (; i < len; i++) *(dst+i) = 0;
