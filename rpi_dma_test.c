@@ -252,13 +252,13 @@ int dma_test_mem_transfer(void)
     char *srce = (char *)(cbp+1);
     char *dest = srce + 0x100;
 
-    printf("xxx\n");
-    //printf("copy to %p\n", srce);
-    //*srce = 0; // works
     printf("copy to %p\n", srce);
     *(srce+0) = 'm'; // works
     printf(".\n");
-    *(srce+12) = 'e'; // works 1..4
+    *(srce+20) = 'e'; // works 1..4..20
+    printf(".\n");
+    char *s = "memory transfer OK";
+    strcpy(srce, s);
     printf(".\n");
     strcpy(srce, "memory transfer OK"); // FIXME bus error
     printf("xxx\n");
