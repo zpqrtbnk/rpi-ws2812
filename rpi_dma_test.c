@@ -340,7 +340,7 @@ void terminate(int sig)
 // Set input or output
 void gpio_mode(int pin, int mode)
 {
-    size_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin/10;
+    uint32_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin/10;
     printf("set gpio pin %d mode %d (%p)\n", pin, mode, reg);
     uint32_t shift = (pin % 10) * 3;
     *reg = (*reg & ~(7 << shift)) | (mode << shift);
@@ -349,15 +349,15 @@ void gpio_mode(int pin, int mode)
 // Set an O/P pin
 void gpio_out(int pin, int val)
 {
-    size_t *reg = VIRT_GPIO_REG(val ? GPIO_SET0 : GPIO_CLR0) + pin/32;
-    printf("set gpio ping %d value %d (%p)\n", pin, val, reg);
+    uint32_t *reg = VIRT_GPIO_REG(val ? GPIO_SET0 : GPIO_CLR0) + pin/32;
+    printf("set gpio pin %d value %d (%p)\n", pin, val, reg);
     *reg = 1 << (pin % 32);
 }
 
 // Get an I/P pin value
 uint8_t gpio_in(int pin)
 {
-    size_t *reg = VIRT_GPIO_REG(GPIO_LEV0) + pin/32;
+    uint32_t *reg = VIRT_GPIO_REG(GPIO_LEV0) + pin/32;
     return (((*reg) >> (pin % 32)) & 1);
 }
 
