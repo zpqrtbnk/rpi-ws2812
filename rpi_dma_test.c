@@ -323,7 +323,7 @@ int main(int argc, char *argv[])
     printf("use mailbox\n");
     mbox_fd = open_mbox();
     if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
-        (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
+        (bus_dma_mem = (size_t)lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
         (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)
             FAIL("Error: can't allocate uncached memory\n");
     printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
