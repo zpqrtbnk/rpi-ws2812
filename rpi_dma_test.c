@@ -207,8 +207,6 @@ int main(int argc, char *argv[])
 {
     printf("dma-test\n");
 
-
-
     // Ensure cleanup if user hits ctrl-C
     signal(SIGINT, terminate);
 
@@ -342,13 +340,16 @@ void terminate(int sig)
 // Set input or output
 void gpio_mode(int pin, int mode)
 {
-    size_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin / 10, shift = (pin % 10) * 3;
+    printf("set gpio mode %d for pin %d", mode, pin);
+    size_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin/10;
+    uint32_t shift = (pin % 10) * 3;
     *reg = (*reg & ~(7 << shift)) | (mode << shift);
 }
 
 // Set an O/P pin
 void gpio_out(int pin, int val)
 {
+    printf("set gpio value %d for pin %d", val, pin);
     size_t *reg = VIRT_GPIO_REG(val ? GPIO_SET0 : GPIO_CLR0) + pin/32;
     *reg = 1 << (pin % 32);
 }
