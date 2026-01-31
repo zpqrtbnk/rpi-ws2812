@@ -279,12 +279,14 @@ int dma_test_mem_transfer(void)
     //printf("DMA test: %s\n", dest[0] ? dest : "failed");
     //return(dest[0] != 0);
 
+    printf("copy\n");
     char ddest[128];
     int i;
     for (i = 0; i < 128 && *(dest+i) != 0; i++) ddest[i] = *(dest+i);
     ddest[i] = 0;
 
-    printf("DMA test: %s\n", ddest[0] ? dest : "failed");
+    printf("result\n");
+    printf("DMA test: %s\n", ddest[0] ? ddest : "failed");
     return(ddest[0] != 0);
 }
 
