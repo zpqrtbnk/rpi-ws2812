@@ -80,7 +80,7 @@ int mbox_fd, dma_mem_h;
 void *bus_dma_mem;
 
 // Convert memory bus address to physical address (for mmap)
-#define BUS_PHYS_ADDR(a) ((void *)((size_t)(a)&~0xC0000000))
+#define BUS_PHYS_ADDR(a) ((void *)((size_t)(a) & ~0xC0000000))
 
 // Videocore mailbox memory allocation flags, see:
 //     https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface
@@ -121,7 +121,7 @@ typedef struct {
 #define DMA_NEXTCONBK   (DMA_CHAN*0x100 + 0x1c)
 #define DMA_DEBUG       (DMA_CHAN*0x100 + 0x20)
 #define DMA_ENABLE      0xff0
-#define VIRT_DMA_REG(a) ((volatile uint32_t *)((size_t)virt_dma_regs + a))
+#define VIRT_DMA_REG(a) ((volatile uint32_t *)((size_t)virt_dma_regs + (size_t)a))
 char *dma_regstrs[] = {"DMA CS", "CB_AD", "TI", "SRCE_AD", "DEST_AD",
     "TFR_LEN", "STRIDE", "NEXT_CB", "DEBUG", ""};
 
@@ -252,17 +252,20 @@ int dma_test_mem_transfer(void)
     char *srce = (char *)(cbp+1);
     char *dest = srce + 0x100;
 
+    printf("xxx\n");
     strcpy(srce, "memory transfer OK");
+    printf("xxx\n");
     memset(cbp, 0, sizeof(DMA_CB));
+    printf("xxx\n");
     cbp->ti = DMA_CB_SRC_INC | DMA_CB_DEST_INC;
     cbp->srce_ad = BUS_DMA_MEM(srce);
     cbp->dest_ad = BUS_DMA_MEM(dest);
     cbp->tfr_len = strlen(srce) + 1;
     start_dma(cbp);
     usleep(10);
-#if DEBUG
+
     disp_dma();
-#endif
+
     printf("DMA test: %s\n", dest[0] ? dest : "failed");
     return(dest[0] != 0);
 }
@@ -401,9 +404,9 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp)
         printf("VC IOCTL partial error\n");
     else
         ret = msgp->uints[0];
-#if DEBUG
+
     disp_vc_msg(msgp);
-#endif
+
     return(ret);
 }
 
