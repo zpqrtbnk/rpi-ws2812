@@ -247,6 +247,7 @@ int main(int argc, char *argv[])
 // DMA memory-to-memory test
 int dma_test_mem_transfer(void)
 {
+    printf("test mem transfer\n");
     DMA_CB *cbp = virt_dma_mem;
     char *srce = (char *)(cbp+1);
     char *dest = srce + 0x100;
@@ -269,6 +270,8 @@ int dma_test_mem_transfer(void)
 // DMA memory-to-GPIO test: flash LED
 void dma_test_led_flash(int pin)
 {
+    printf("test led flash\n");
+
     DMA_CB *cbp=virt_dma_mem;
     size_t *data = (size_t *)(cbp+1), n;
 
@@ -288,6 +291,8 @@ void dma_test_led_flash(int pin)
 // DMA trigger test: fLash LED using PWM trigger
 void dma_test_pwm_trigger(int pin)
 {
+    printf("test pwm trigger\n");
+
     DMA_CB *cbs=virt_dma_mem;
     size_t n, *pindata=(size_t *)(cbs+4), *pwmdata=pindata+1;
 
