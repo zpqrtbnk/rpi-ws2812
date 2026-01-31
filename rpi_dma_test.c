@@ -506,6 +506,7 @@ void enable_dma(void)
 // Start DMA, given first control block
 void start_dma(DMA_CB *cbp)
 {
+    printf("start dma\n");
     *VIRT_DMA_REG(DMA_CONBLK_AD) = BUS_DMA_MEM(cbp);
     *VIRT_DMA_REG(DMA_CS) = 2;       // Clear 'end' flag
     *VIRT_DMA_REG(DMA_DEBUG) = 7;    // Clear error bits
@@ -515,6 +516,7 @@ void start_dma(DMA_CB *cbp)
 // Halt current DMA operation by resetting controller
 void stop_dma(void)
 {
+    printf("stop dma\n");
     if (virt_dma_regs)
         *VIRT_DMA_REG(DMA_CS) = 1 << 31;
 }
