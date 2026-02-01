@@ -31,6 +31,12 @@
 // If non-zero, enable PWM hardware output
 #define PWM_OUT         0
 
+#if DEBUG
+#define debug printf
+#else
+#define debug \/\/
+#endif
+
 char *dma_regstrs[] = {"DMA CS", "CB_AD", "TI", "SRCE_AD", "DEST_AD",
     "TFR_LEN", "STRIDE", "NEXT_CB", "DEBUG", ""};
 char *gpio_mode_strs[] = {GPIO_MODE_STRS};
