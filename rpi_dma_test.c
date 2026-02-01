@@ -41,7 +41,7 @@
 #if DEBUG
 #define debug printf
 #else
-#define debug \/\/
+#define debug(...)
 #endif
 
 // Output pin to use for LED
