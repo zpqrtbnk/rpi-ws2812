@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
     if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
         (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
         (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)
-            FAIL("Error: can't allocate uncached memory\n");
+            FAIL("ERROR: can't allocate uncached memory\n");
     printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
 
     // Run DMA tests
@@ -505,7 +505,7 @@ int open_mbox(void)
    int fd;
 
    if ((fd = open("/dev/vcio", 0)) < 0)
-       FAIL("Error: can't open VC mailbox\n");
+       FAIL("ERROR: can't open VC mailbox\n");
    return(fd);
 }
 // Close mailbox interface
@@ -557,8 +557,9 @@ void *lock_vc_mem(int fd, int h)
 
     // msg_box returns uint32_t that we cast into a (void *) which is 64 bits
     // because msg_box returns a bus address which is 32 bits even on 64 bits
+    // this below... gets rid of the warning... even though it's not pretty
 
-    return(h ? (void*)((size_t)0 & msg_mbox(fd, &msg)) : 0);
+    return(h ? (void*)((size_t)0 + msg_mbox(fd, &msg)) : 0);
 }
 // Unlock allocated memory
 uint32_t unlock_vc_mem(int fd, int h)
@@ -609,7 +610,7 @@ void *map_segment(void *addr, int size)
     printf("mapping %d at %p\n", size, (void *)addr);
 
     if ((fd = open ("/dev/mem", O_RDWR|O_SYNC|O_CLOEXEC)) < 0)
-        FAIL("Error: can't open /dev/mem, run using sudo\n");
+        FAIL("ERROR: can't open /dev/mem, run using sudo\n");
 
     mem = mmap(
         0, // any address in our space will do
@@ -625,7 +626,7 @@ void *map_segment(void *addr, int size)
     printf("  mapped %p -> %p\n", (void *)addr, mem);
 
     if (mem == MAP_FAILED)
-        FAIL("Error: can't map memory\n");
+        FAIL("ERROR: can't map memory\n");
 
     return mem;
 }
