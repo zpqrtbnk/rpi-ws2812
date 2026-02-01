@@ -38,6 +38,12 @@
 // If non-zero, print debug information
 #define DEBUG           0
 
+#if DEBUG
+#define debug printf
+#else
+#define debug \/\/
+#endif
+
 // Output pin to use for LED
 //#define LED_PIN         47    // Pi Zero onboard LED
 #define LED_PIN         21      // Offboard LED pin
@@ -274,6 +280,7 @@ void *virt_clk_regs;
 #define PWM_CLOCK_ID    0xa
 
 #define FAIL(x) {printf(x); terminate(0);}
+#define fail(x) {printf(x); terminate(0);}
 
 int dma_test_mem_transfer(void);
 void dma_test_led_flash(int pin);
