@@ -558,7 +558,7 @@ void *lock_vc_mem(int fd, int h)
     // msg_box returns uint32_t that we cast into a (void *) which is 64 bits
     // because msg_box returns a bus address which is 32 bits even on 64 bits
 
-    return(h ? (size_t)0 & msg_mbox(fd, &msg) : 0);
+    return(h ? (void*)((size_t)0 & msg_mbox(fd, &msg)) : 0);
 }
 // Unlock allocated memory
 uint32_t unlock_vc_mem(int fd, int h)
