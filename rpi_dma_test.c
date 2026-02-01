@@ -188,6 +188,12 @@ Release Memory
         Value:
             u32: status
 
+see https://forums.raspberrypi.com/viewtopic.php?t=137963&start=75
+
+DMA (like the GPU) uses bus addresses for source and destination. By definition 
+these are 32-bit physical addresses (30 real bits with top two bits used for
+determining caching behaviour).
+
 */
 
 // Mailbox command/response structure
@@ -282,7 +288,7 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp);
 void *map_segment(void *addr, int size);
 void unmap_segment(void *addr, int size);
 uint32_t alloc_vc_mem(int fd, uint32_t size, VC_ALLOC_FLAGS flags);
-uint32_t /*void **/ lock_vc_mem(int fd, int h);
+void *lock_vc_mem(int fd, int h);
 uint32_t unlock_vc_mem(int fd, int h);
 uint32_t free_vc_mem(int fd, int h);
 uint32_t set_vc_clock(int fd, int id, uint32_t freq);
@@ -323,7 +329,7 @@ int main(int argc, char *argv[])
     printf("use mailbox\n");
     mbox_fd = open_mbox();
     if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
-        (bus_dma_mem = (void*)lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
+        (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
         (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)
             FAIL("Error: can't allocate uncached memory\n");
     printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
@@ -541,15 +547,18 @@ uint32_t alloc_vc_mem(int fd, uint32_t size, VC_ALLOC_FLAGS flags)
     return(msg_mbox(fd, &msg));
 }
 // Lock allocated memory, return bus address
-//void *lock_vc_mem(int fd, int h)
-uint32_t lock_vc_mem(int fd, int h)
+void *lock_vc_mem(int fd, int h)
 {
     printf("lock vc mem\n");
     VC_MSG msg={.tag=0x3000d, .blen=4, .dlen=4, .uints={h}};
-    // FIXME warning: cast to pointer from integer of different size ??
-    // msg_box returns uint32_t that we cast into a (void *) which is 64 bits??
+
+    // this -> warning: cast to pointer from integer of different size
     //return(h ? (void *)msg_mbox(fd, &msg) : 0);
-    return(h ? msg_mbox(fd, &msg) : 0);
+
+    // msg_box returns uint32_t that we cast into a (void *) which is 64 bits
+    // because msg_box returns a bus address which is 32 bits even on 64 bits
+
+    return(h ? (size_t)0 & msg_mbox(fd, &msg) : 0);
 }
 // Unlock allocated memory
 uint32_t unlock_vc_mem(int fd, int h)
