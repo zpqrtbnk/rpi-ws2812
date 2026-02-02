@@ -306,10 +306,11 @@ void *map_segment(void *addr, int size)
     void *mem;
 
     size = PAGE_ROUNDUP(size);
-    debug("mapping %d at %p\n", size, (void *)addr);
+    debug("mapping %d at %p", size, (void *)addr);
 
     if ((fd = open ("/dev/mem", O_RDWR|O_SYNC|O_CLOEXEC)) < 0)
     {
+        debug("\n");
         printf("error: can't open /dev/mem, are you root?\n");
         return 0;
     }
@@ -325,13 +326,14 @@ void *map_segment(void *addr, int size)
 
     close(fd);
 
-    debug("  mapped %p -> %p\n", (void *)addr, mem);
-
     if (mem == MAP_FAILED)
     {
+        debug("\n");
         printf("error: failed to map memory\n");
         return 0;
     }
+
+    debug(" -> %p\n", mem);
 
     return mem;
 }
@@ -387,7 +389,7 @@ void stop_dma(int chan)
     debug("dma chan=%d stop\n", chan);
     if (dma_regs.virt)
         *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 1 << 31;
-    debug("  stopped");
+    debug("  stopped\n");
 }
 
 // Display DMA registers
