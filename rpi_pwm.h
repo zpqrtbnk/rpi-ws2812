@@ -1,6 +1,6 @@
 //
 
-extern MEM_MAP pwm_regs;
+extern MEM_MAP pwm_regs, clk_regs;
 
 // PWM controller registers
 #define PWM_BASE        (PHYS_REG_BASE + 0x20C000)
@@ -20,8 +20,17 @@ extern MEM_MAP pwm_regs;
 #define PWM_ENAB        1       // Enable PWM
 #define PWM_PIN         12      // GPIO pin for PWM output, 12 or 18
 
+// Clock registers and values
+#define CLK_BASE        (PHYS_REG_BASE + 0x101000)
+#define CLK_PWM_CTL     0xa0
+#define CLK_PWM_DIV     0xa4
+#define CLK_PASSWD      0x5a000000
+#define PWM_CLOCK_ID    0xa
+
 void *map_pwm();
 void unmap_pwm();
+void *map_clk();
+void unmap_clk();
 
 void init_pwm(int freq, int range, int val);
 void start_pwm(void);

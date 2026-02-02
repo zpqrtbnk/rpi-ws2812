@@ -13,7 +13,7 @@
 #include "rpi_lib.h"
 #include "rpi_pwm.h"
 
-MEM_MAP pwm_regs;
+MEM_MAP pwm_regs, clk_regs;
 
 void *map_pwm() {
     if (map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE) == 0)
@@ -24,6 +24,17 @@ void *map_pwm() {
 void unmap_pwm() {
     if (pwm_regs.virt != 0)
         unmap_periph(&pwm_regs);
+}
+
+void *map_clk() {
+    if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0)
+        printf("error: failed to map clk registers\n");
+    return clk_regs.virt;
+}
+
+void unmap_clk() {
+    if (clk_regs.virt != 0)
+        unmap_periph(&clk_regs);
 }
 
 // Initialise PWM

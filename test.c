@@ -34,15 +34,12 @@ void terminate(int sig);
 // Size of uncached memory for DMA control blocks and data
 #define DMA_MEM_SIZE PAGE_SIZE
 
-// // VC mailbox file descriptor & handle, and bus memory pointer
-// int mbox_fd, dma_mem_h;
-// void *bus_dma_mem;
-// // Virtual memory for DMA descriptors and data buffers (uncached)
-// void *virt_dma_mem;
 MEM_MAP dma_mem;
 
 int main(int argc, char *argv[])
 {
+    printf("configure\n");
+
     // cleanup if user hits ctrl-C
     signal(SIGINT, terminate);
 
@@ -50,8 +47,7 @@ int main(int argc, char *argv[])
     if (map_gpio() == 0) fail("oops\n");
     if (map_pwm() == 0) fail("oops\n");
     if (map_dma() == 0) fail("oops\n");
-    if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map clk registers\n");
+    if (map_clk() == 0) fail("oops\n");
     if (map_smi() == 0) fail("oops\n");
 
     // set LED pin as output, pull high
@@ -60,7 +56,7 @@ int main(int argc, char *argv[])
     // get uncached memory for DMA decriptors and buffers
     if (map_uncached_mem(&dma_mem, DMA_MEM_SIZE) == 0) fail ("oops\n");
 
-    printf("enable dma\n");
+    // enable dma
     enable_dma(DMA_CHAN);
 
     // run tests
@@ -84,19 +80,6 @@ int dma_test_mem_transfer(void)
     char *srce = (char *)(cbp+1);
     char *dest = srce + 0x100;
 
-    // printf("copy to %p\n", srce);
-    // *(srce+0) = 'm'; // works
-    // printf(".\n");
-    // *(srce+20) = 'e'; // works 1..4..20
-    // printf(".\n");
-    // char *s = "memory transfer OK";
-    // for (int i = 0; i < 19; i++) *(srce+i) = s[i]; // works ?? 19 for \0
-    // printf(".\n");
-    //strncpy(srce, s, 18); // FIXME bus error
-    //printf(".\n");
-    //strcpy(srce, "memory transfer OK"); // FIXME bus error
-    //printf("xxx\n");
-
     strxcpy("memory transfer OK", srce, 20);
     memset(cbp, 0, sizeof(DMA_CB));
     cbp->ti = DMA_CB_SRCE_INC | DMA_CB_DEST_INC;
@@ -107,10 +90,6 @@ int dma_test_mem_transfer(void)
     usleep(10);
 
     disp_dma(DMA_CHAN);
-
-    // FIXME bus error? string issues?
-    //printf("DMA test: %s\n", dest[0] ? dest : "failed");
-    //return(dest[0] != 0);
 
     printf("copy\n");
     char ddest[128];
@@ -181,13 +160,17 @@ void dma_test_pwm_trigger(int pin)
 void terminate(int sig)
 {
     printf("closing\n");
+
     stop_pwm();
     stop_dma(DMA_CHAN);
 
     unmap_dma();
-    unmap_periph(&clk_regs);
+    unmap_clk();
     unmap_pwm();
     unmap_gpio();
     unmap_smi();
+
+    unmap_mem(&dma_mem);
+
     exit(0);
 }

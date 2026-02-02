@@ -27,9 +27,6 @@
 #include "rpi_lib.h"
 #include "rpi_vm.h"
 
-// Virtual memory pointers to acceess GPIO, DMA and PWM from user space
-MEM_MAP clk_regs;
-
 // Use mmap to obtain virtual address, given physical
 void *map_periph(MEM_MAP *mp, void *phys, int size)
 {
