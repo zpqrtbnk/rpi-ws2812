@@ -20,11 +20,11 @@
 #include "rpi_dma.h"
 
 #define fail(x) {printf(x); terminate(0);}
+void terminate(int sig);
 
 int dma_test_mem_transfer(void);
 void dma_test_led_flash(int pin);
 void dma_test_pwm_trigger(int pin);
-void terminate(int sig);
 
 #define DMA_CHAN 5
 #define LED_PIN 21

@@ -38,8 +38,16 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
-#include "rpi_dma_utils.h"
-#include "rpi_smi_defs.h"
+
+#include "utils.h"
+
+#include "rpi_lib.h"
+#include "rpi_gpio.h"
+#include "rpi_smi.h"
+#include "rpi_pwm.h"
+#include "rpi_vc.h"
+#include "rpi_vm.h"
+#include "rpi_dma.h"
 
 #if PHYS_REG_BASE==PI_4_REG_BASE        // Timings for RPi v4 (1.5 GHz)
 #define SMI_TIMING       10, 15, 30, 15    // 400 ns cycle time
@@ -69,9 +77,7 @@
 #define TXDATA_T        uint8_t
 #endif
 
-// Structures for mapped I/O devices, and non-volatile memory
-extern MEM_MAP gpio_regs, dma_regs, clk_regs;
-MEM_MAP vc_mem, smi_regs;
+MEM_MAP vc_mem;
 
 // Pointers to SMI registers
 volatile SMI_CS_REG  *smi_cs;
@@ -107,17 +113,17 @@ TXDATA_T tx_test_data[] = {1, 2, 3, 4, 5, 6, 7, 0};
 
 TXDATA_T *txdata;                       // Pointer to uncached Tx data buffer
 TXDATA_T tx_buffer[TX_BUFF_LEN(CHAN_MAXLEDS)];  // Tx buffer for assembling data
+
 int testmode, chan_ledcount=1;          // Command-line parameters
 int rgb_data[CHAN_MAXLEDS][LED_NCHANS]; // RGB data
 int chan_num;                           // Current channel for data I/P
 
+#define fail(x) {printf(x); terminate(0);}
+void terminate(int sig);
+
 void rgb_txdata(int *rgbs, TXDATA_T *txd);
 int str_rgb(char *s, int rgbs[][LED_NCHANS], int chan);
-void swap_bytes(void *data, int len);
-int hexdig(char c);
 void map_devices(void);
-void fail(char *s);
-void terminate(int sig);
 void init_smi(int width, int ns, int setup, int hold, int strobe);
 void setup_smi_dma(MEM_MAP *mp, int nsamp);
 void start_smi(MEM_MAP *mp);
@@ -257,41 +263,18 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
     }
 }
 
-// Swap adjacent bytes in transmit data
-void swap_bytes(void *data, int len)
-{
-    uint16_t *wp = (uint16_t *)data;
 
-    len = (len + 1) / 2;
-    while (len-- > 0)
-    {
-        *wp = __builtin_bswap16(*wp);
-        wp++;
-    }
-}
 
-// Return hex digit value, -ve if not hex
-int hexdig(char c)
-{
-    c = toupper(c);
-    return((c>='0' && c<='9') ? c-'0' : (c>='A' && c<='F') ? c-'A'+10 : -1);
-}
+
 
 // Map GPIO, DMA and SMI registers into virtual mem (user space)
 // If any of these fail, program will be terminated
 void map_devices(void)
 {
-    map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE);
-    map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE);
-    map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE);
-    map_periph(&smi_regs, (void *)SMI_BASE, PAGE_SIZE);
-}
-
-// Catastrophic failure in initial setup
-void fail(char *s)
-{
-    printf(s);
-    terminate(0);
+    if (map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE) == 0) fail("oops\n");
+    if (map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE) == 0) fail("oops\n");
+    if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0) fail("oops\n");
+    if (map_periph(&smi_regs, (void *)SMI_BASE, PAGE_SIZE) == 0) fail("oops\n");
 }
 
 // Free memory segments and exit
@@ -299,7 +282,7 @@ void terminate(int sig)
 {
     int i;
 
-    printf("Closing\n");
+    printf("closing\n");
     if (gpio_regs.virt)
     {
         for (i=0; i<LED_NCHANS; i++)
@@ -308,10 +291,14 @@ void terminate(int sig)
     if (smi_regs.virt)
         *REG32(smi_regs, SMI_CS) = 0;
     stop_dma(DMA_CHAN);
-    unmap_periph_mem(&vc_mem);
-    unmap_periph_mem(&smi_regs);
-    unmap_periph_mem(&dma_regs);
-    unmap_periph_mem(&gpio_regs);
+
+    unmap_mem(&vc_mem);
+
+    unmap_periph(&smi_regs);
+    unmap_periph(&dma_regs);
+    unmap_periph(&clk_regs);
+    unmap_periph(&gpio_regs);
+
     exit(0);
 }
 
