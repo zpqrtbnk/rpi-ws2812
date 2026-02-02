@@ -56,9 +56,13 @@ int main(int argc, char *argv[])
     // set LED pin as output, pull high
     gpio_set(LED_PIN, GPIO_OUT, 1);
 
-    // light LED once
+    // flash LED
     gpio_out(LED_PIN, 1);
-    sleep(2);
+    sleep(1);
+    gpio_out(LED_PIN, 0);
+    sleep(1);
+    gpio_out(LED_PIN, 1);
+    sleep(1);
     gpio_out(LED_PIN, 0);
 
     // get uncached memory for DMA decriptors and buffers
