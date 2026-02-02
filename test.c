@@ -57,30 +57,19 @@ int main(int argc, char *argv[])
     // set LED pin as output, pull high
     gpio_set(LED_PIN, GPIO_OUT, 1);
 
+    // get uncached memory for DMA decriptors and buffers
+    if (map_uncached_mem(&dma_mem, DMA_MEM_SIZE) == 0) fail ("oops\n");
+
     printf("enable dma\n");
     enable_dma(DMA_CHAN);
 
-    // Use mailbox to get uncached memory for DMA decriptors and buffers
-    printf("use mailbox\n");
-    // mbox_fd = open_mbox();
-    // if (mbox_fd < 0) 
-    // {
-    //     fail("error: failed to open mailbox\n");
-    // }
-    // if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
-    //     (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
-    //     (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)
-    //         fail("error: can't allocate uncached memory\n");
-    // printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
-    if (map_uncached_mem(&dma_mem, DMA_MEM_SIZE) == 0) fail ("oops\n");
-
-    // Run DMA tests
+    // run tests
     printf("run tests\n");
     dma_test_mem_transfer();
     dma_test_led_flash(LED_PIN);
     dma_test_pwm_trigger(LED_PIN);
 
-    // Over and out
+    // over and out
     printf("terminate\n");
     terminate(0);
 }
