@@ -68,15 +68,13 @@ void unmap_periph_mem(MEM_MAP *mp)
 {
     if (mp)
     {
+        unmap_segment(mp->virt, mp->size);
         if (mp->fd)
         {
-            unmap_segment(mp->virt, mp->size);
             unlock_vc_mem(mp->fd, mp->h);
             free_vc_mem(mp->fd, mp->h);
             close_mbox(mp->fd);
         }
-        else
-            unmap_segment(mp->virt, mp->size);
     }
 }
 

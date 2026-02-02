@@ -10,6 +10,7 @@
 #include <sys/mman.h>
 
 #include "rpi_lib.h"
+#include "rpi_smi.h"
 
 #define fail(x) {printf(x); terminate(0);}
 
@@ -51,7 +52,9 @@ int main(int argc, char *argv[])
     if (map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE) == 0)
         fail("error: failed to map pwm registers\n");
     if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map pwm registers\n");
+        fail("error: failed to map clk registers\n");
+    if (map_smi() == 0) fail("oops\n");
+
     //map_periph(&spi_regs, (void *)SPI0_BASE, PAGE_SIZE);
 
     printf("enable dma\n");
@@ -201,15 +204,21 @@ void terminate(int sig)
     printf("closing\n");
     stop_pwm();
     stop_dma(DMA_CHAN);
-    unmap_segment(virt_dma_mem, DMA_MEM_SIZE);
-    unlock_vc_mem(mbox_fd, dma_mem_h);
-    free_vc_mem(mbox_fd, dma_mem_h);
-    close_mbox(mbox_fd);
+
+    // unmap_segment(virt_dma_mem, DMA_MEM_SIZE);
+    // unlock_vc_mem(mbox_fd, dma_mem_h);
+    // free_vc_mem(mbox_fd, dma_mem_h);
+    // close_mbox(mbox_fd);
+
     //unmap_segment(virt_clk_regs, PAGE_SIZE);
     //unmap_segment(virt_pwm_regs, PAGE_SIZE);
     //unmap_segment(virt_dma_regs, PAGE_SIZE);
     //unmap_segment(virt_gpio_regs, PAGE_SIZE);
+    
     unmap_periph_mem(&dma_regs);
     unmap_periph_mem(&gpio_regs);
+    unmap_periph_mem(&clk_regs);
+    unmap_periph_mem(&pwm_regs);
+    unmap_smi();
     exit(0);
 }
