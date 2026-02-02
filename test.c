@@ -75,8 +75,6 @@ int main(int argc, char *argv[])
     terminate(0);
 }
 
-
-
 // DMA memory-to-memory test
 int dma_test_mem_transfer(void)
 {
@@ -88,8 +86,8 @@ int dma_test_mem_transfer(void)
     strxcpy("memory transfer OK", srce, 20);
     memset(cbp, 0, sizeof(DMA_CB));
     cbp->ti = DMA_CB_SRCE_INC | DMA_CB_DEST_INC;
-    cbp->srce_ad = MEM_BUS_ADDR((&dma_regs), srce);
-    cbp->dest_ad = MEM_BUS_ADDR((&dma_regs), dest);
+    cbp->srce_ad = MEM_BUS_ADDR(&dma_regs, srce);
+    cbp->dest_ad = MEM_BUS_ADDR(&dma_regs, dest);
     cbp->tfr_len = strlen(srce) + 1;
     start_dma(&dma_regs, DMA_CHAN, cbp, 0);
     usleep(10);
