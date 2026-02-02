@@ -52,6 +52,9 @@ int main(int argc, char *argv[])
 
     // set LED pin as output, pull high
     gpio_set(LED_PIN, GPIO_OUT, 1);
+    gpio_out(LED_PIN, 1);
+    sleep(2);
+    gpio_out(LED_PIN, 0);
 
     // get uncached memory for DMA decriptors and buffers
     if (map_uncached_mem(&dma_mem, DMA_MEM_SIZE) == 0) fail ("oops\n");
