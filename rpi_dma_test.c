@@ -480,27 +480,6 @@ void terminate(int sig)
 
 // ----- GPIO -----
 
-// Set input or output with pullups
-void gpio_set(int pin, int mode, int pull)
-{
-    gpio_mode(pin, mode);
-    gpio_pull(pin, pull);
-}
-
-// Set ping pullup or pulldown
-void gpio_pull(int pin, int pull)
-{
-    volatile uint32_t *reg = REG32(gpio_regs, GPIO_GPPUDCLK0) + pin / 32;
-    debug("set gpio pin %d pull %d (%p)\n", pin, pull, reg);
-
-    *REG32(gpio_regs, GPIO_GPPUD) = pull;
-    usleep(2);
-    *reg = 1 << (pin % 32);
-    usleep(2);
-    *REG32(gpio_regs, GPIO_GPPUD) = 0;
-    *reg = 0;
-}
-
 // Set input or output
 void gpio_mode(int pin, int mode)
 {

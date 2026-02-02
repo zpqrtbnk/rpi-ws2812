@@ -350,21 +350,21 @@ void unmap_segment(void *mem, int size)
 // Enable and reset DMA
 void enable_dma(int chan)
 {
-    debug("dma chan=%d enable\n", chan);
+    debug("dma chan=%d enable", chan);
     *REG32(dma_regs, DMA_ENABLE) |= (1 << chan);
     *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 1 << 31;
-    debug("  enabled\n");
+    debug(" -> enabled\n");
 }
 
 // Start DMA, given first control block
 void start_dma(MEM_MAP *mp, int chan, DMA_CB *cbp, uint32_t csval)
 {
-    debug("dma chan=%d start\n", chan);
+    debug("dma chan=%d start", chan);
     *REG32(dma_regs, DMA_REG(chan, DMA_CONBLK_AD)) = MEM_BUS_ADDR(mp, cbp);
     *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 2;        // Clear 'end' flag
     *REG32(dma_regs, DMA_REG(chan, DMA_DEBUG)) = 7;     // Clear error bits
     *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 1|csval;  // Start DMA
-    debug("  started\n");
+    debug(" -> started\n");
 }
 
 // Return remaining transfer length
@@ -386,10 +386,10 @@ uint32_t dma_active(int chan)
 // Halt current DMA operation by resetting controller
 void stop_dma(int chan)
 {
-    debug("dma chan=%d stop\n", chan);
+    debug("dma chan=%d stop", chan);
     if (dma_regs.virt)
         *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 1 << 31;
-    debug("  stopped\n");
+    debug(" -> stopped\n");
 }
 
 // Display DMA registers
