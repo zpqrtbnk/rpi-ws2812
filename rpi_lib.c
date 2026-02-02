@@ -420,18 +420,12 @@ void init_pwm(int freq, int range, int val)
 #if USE_VC_CLOCK_SET
     set_vc_clock(mbox_fd, PWM_CLOCK_ID, freq);
 #else
-    printf("!\n"); // <<<< this prints and then segfaults
     int divi=CLOCK_HZ / freq;
     *REG32(clk_regs, CLK_PWM_CTL) = CLK_PASSWD | (1 << 5);
-    printf("!\n");
     while (*REG32(clk_regs, CLK_PWM_CTL) & (1 << 7)) ;
-    printf("!\n");
     *REG32(clk_regs, CLK_PWM_DIV) = CLK_PASSWD | (divi << 12);
-    printf("!\n");
     *REG32(clk_regs, CLK_PWM_CTL) = CLK_PASSWD | 6 | (1 << 4);
-    printf("!\n");
     while ((*REG32(clk_regs, CLK_PWM_CTL) & (1 << 7)) == 0) ;
-    printf("!\n");
 #endif
     usleep(100);
     *REG32(pwm_regs, PWM_RNG1) = range;

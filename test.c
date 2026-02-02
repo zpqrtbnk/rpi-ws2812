@@ -42,12 +42,15 @@ int main(int argc, char *argv[])
     signal(SIGINT, terminate);
 
     // Map GPIO, DMA and PWM registers into virtual mem (user space)
+    // FIXME should be a LIB method of some sort?
     printf("map registers\n");
     if (map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE) == 0)
         fail("error: failed to map gpio registers\n");
     if (map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE) == 0)
         fail("error: failed to map dma registers\n");
     if (map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE) == 0)
+        fail("error: failed to map pwm registers\n");
+    if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0)
         fail("error: failed to map pwm registers\n");
     //map_periph(&spi_regs, (void *)SPI0_BASE, PAGE_SIZE);
 
