@@ -1,5 +1,7 @@
 // 
 
+extern MEM_MAP smi_regs;
+
 // Register definitions
 #define SMI_BASE    (PHYS_REG_BASE + 0x600000)
 #define SMI_CS      0x00    // Control & status

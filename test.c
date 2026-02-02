@@ -9,8 +9,15 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#include "utils.h"
+
 #include "rpi_lib.h"
+#include "rpi_gpio.h"
 #include "rpi_smi.h"
+#include "rpi_pwm.h"
+#include "rpi_vc.h"
+#include "rpi_vm.h"
+#include "rpi_dma.h"
 
 #define fail(x) {printf(x); terminate(0);}
 
@@ -45,12 +52,9 @@ int main(int argc, char *argv[])
     // Map GPIO, DMA and PWM registers into virtual mem (user space)
     // FIXME should be a LIB method of some sort?
     printf("map registers\n");
-    if (map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map gpio registers\n");
-    if (map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map dma registers\n");
-    if (map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map pwm registers\n");
+    if (map_gpio() == 0) fail("oops\n");
+    if (map_pwm() == 0) fail("oops\n");
+    if (map_dma() == 0) fail("oops\n");
     if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0)
         fail("error: failed to map clk registers\n");
     if (map_smi() == 0) fail("oops\n");
@@ -89,13 +93,7 @@ int main(int argc, char *argv[])
     terminate(0);
 }
 
-void strxcpy(char *src, char *dst, int len)
-{
-    // for alignment (?) reasons strcpy and strncpy bus-err on string access
-    int i = 0;
-    for (; i < len && *(src+i) != 0; i++) *(dst+i) = *(src+i);
-    for (; i < len; i++) *(dst+i) = 0;
-}
+
 
 // DMA memory-to-memory test
 int dma_test_mem_transfer(void)
@@ -205,20 +203,10 @@ void terminate(int sig)
     stop_pwm();
     stop_dma(DMA_CHAN);
 
-    // unmap_segment(virt_dma_mem, DMA_MEM_SIZE);
-    // unlock_vc_mem(mbox_fd, dma_mem_h);
-    // free_vc_mem(mbox_fd, dma_mem_h);
-    // close_mbox(mbox_fd);
-
-    //unmap_segment(virt_clk_regs, PAGE_SIZE);
-    //unmap_segment(virt_pwm_regs, PAGE_SIZE);
-    //unmap_segment(virt_dma_regs, PAGE_SIZE);
-    //unmap_segment(virt_gpio_regs, PAGE_SIZE);
-    
-    unmap_periph_mem(&dma_regs);
-    unmap_periph_mem(&gpio_regs);
-    unmap_periph_mem(&clk_regs);
-    unmap_periph_mem(&pwm_regs);
+    unmap_dma();
+    unmap_periph(&clk_regs);
+    unmap_pwm();
+    unmap_gpio();
     unmap_smi();
     exit(0);
 }
