@@ -170,7 +170,7 @@ void dma_test_pwm_trigger(int pin)
     // Transfers are triggered by PWM request
     cbs[0].ti = cbs[1].ti = cbs[2].ti = cbs[3].ti = (1 << 6) | (DMA_PWM_DREQ << 16);
     // Control block 0 and 2: clear & set LED pin, 4-byte transfer
-    cbs[0].srce_ad = cbs[2].srce_ad = MEM_BUS_ADDR((&dma_regs), pindata);
+    cbs[0].srce_ad = cbs[2].srce_ad = MEM_BUS_ADDR(&dma_regs, pindata);
     cbs[0].dest_ad = REG_BUS_ADDR(gpio_regs, GPIO_CLR0);
     cbs[2].dest_ad = REG_BUS_ADDR(gpio_regs, GPIO_SET0);
     cbs[0].tfr_len = cbs[2].tfr_len = 4;
@@ -182,9 +182,10 @@ void dma_test_pwm_trigger(int pin)
     *pwmdata = PWM_RANGE / 2;
     // Link control blocks 0 to 3 in endless loop
     for (n=0; n<4; n++)
-        cbs[n].next_cb = MEM_BUS_ADDR((&dma_regs), &cbs[(n+1)%4]);
+        cbs[n].next_cb = MEM_BUS_ADDR(&dma_regs, &cbs[(n+1)%4]);
     // Enable PWM with data threshold 1, and DMA
     init_pwm(PWM_FREQ, PWM_RANGE, PWM_RANGE/2);
+    printf("!\n");
     *REG32(pwm_regs, PWM_DMAC) = PWM_DMAC_ENAB|1;
     start_pwm();
     start_dma(&dma_regs, DMA_CHAN, &cbs[0], 0);
