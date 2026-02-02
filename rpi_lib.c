@@ -24,7 +24,7 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
-#include "rpi_dma_utils.h"
+#include "rpi_lib.h"
 
 // If non-zero, print debug information
 #define DEBUG           0
