@@ -418,10 +418,10 @@ void init_pwm(int freq, int range, int val)
         *REG32(pwm_regs, PWM_STA) = 0x100;
     }
 #if USE_VC_CLOCK_SET
-    printf("!1\n")
+    printf("!1\n");
     set_vc_clock(mbox_fd, PWM_CLOCK_ID, freq);
 #else
-    printf("!2\n")
+    printf("!2\n");
     int divi=CLOCK_HZ / freq;
     *REG32(clk_regs, CLK_PWM_CTL) = CLK_PASSWD | (1 << 5);
     while (*REG32(clk_regs, CLK_PWM_CTL) & (1 << 7)) ;
