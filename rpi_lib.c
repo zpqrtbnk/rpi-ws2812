@@ -26,11 +26,6 @@
 
 #include "rpi_lib.h"
 
-// If non-zero, print debug information
-#define DEBUG           0
-// If non-zero, enable PWM hardware output
-#define PWM_OUT         0
-
 #if DEBUG
 #define debug printf
 #else

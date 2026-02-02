@@ -25,8 +25,12 @@
 
 // PI model
 #define WHAT_PI PI_Z2
+
 // If non-zero, print debug information
 #define DEBUG 1
+
+// If non-zero, enable PWM hardware output
+#define PWM_OUT         0
 
 // Location of peripheral registers in physical memory
 // Clock frequency -- FIXME what is clock meh?
