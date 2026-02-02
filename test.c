@@ -52,6 +52,8 @@ int main(int argc, char *argv[])
 
     // set LED pin as output, pull high
     gpio_set(LED_PIN, GPIO_OUT, 1);
+
+    // flash LED once - that works
     gpio_out(LED_PIN, 1);
     sleep(2);
     gpio_out(LED_PIN, 0);
@@ -64,7 +66,7 @@ int main(int argc, char *argv[])
 
     // run tests
     printf("run tests\n");
-    dma_test_mem_transfer();
+    if (dma_test_mem_transfer() == 0) fail("oops\n");
     dma_test_led_flash(LED_PIN);
     dma_test_pwm_trigger(LED_PIN);
 
