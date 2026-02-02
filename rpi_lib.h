@@ -26,7 +26,7 @@
 // PI model
 #define WHAT_PI PI_Z2
 // If non-zero, print debug information
-#define DEBUG 0
+#define DEBUG 1
 
 // Location of peripheral registers in physical memory
 // Clock frequency -- FIXME what is clock meh?

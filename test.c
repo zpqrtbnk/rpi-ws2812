@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
     // Map GPIO, DMA and PWM registers into virtual mem (user space)
     printf("map registers\n");
     if (map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map gpio registers");
+        fail("error: failed to map gpio registers\n");
     if (map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map dma registers");
+        fail("error: failed to map dma registers\n");
     if (map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE) == 0)
-        fail("error: failed to map pwm registers");
+        fail("error: failed to map pwm registers\n");
     //map_periph(&spi_regs, (void *)SPI0_BASE, PAGE_SIZE);
 
     printf("enable dma\n");
@@ -195,7 +195,7 @@ void dma_test_pwm_trigger(int pin)
 // Free memory segments and exit
 void terminate(int sig)
 {
-    printf("Closing\n");
+    printf("closing\n");
     stop_pwm();
     stop_dma(DMA_CHAN);
     unmap_segment(virt_dma_mem, DMA_MEM_SIZE);
