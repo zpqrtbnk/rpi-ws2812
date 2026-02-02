@@ -34,24 +34,19 @@ void terminate(int sig);
 // Size of uncached memory for DMA control blocks and data
 #define DMA_MEM_SIZE PAGE_SIZE
 
-// VC mailbox file descriptor & handle, and bus memory pointer
-int mbox_fd, dma_mem_h;
-void *bus_dma_mem;
+// // VC mailbox file descriptor & handle, and bus memory pointer
+// int mbox_fd, dma_mem_h;
+// void *bus_dma_mem;
+// // Virtual memory for DMA descriptors and data buffers (uncached)
+// void *virt_dma_mem;
+MEM_MAP dma_mem;
 
-// Virtual memory for DMA descriptors and data buffers (uncached)
-void *virt_dma_mem;
-
-// Main program
 int main(int argc, char *argv[])
 {
-    printf("dma-test\n");
-
-    // Ensure cleanup if user hits ctrl-C
+    // cleanup if user hits ctrl-C
     signal(SIGINT, terminate);
 
-    // Map GPIO, DMA and PWM registers into virtual mem (user space)
-    // FIXME should be a LIB method of some sort?
-    printf("map registers\n");
+    // map registers into user space virtual mem
     if (map_gpio() == 0) fail("oops\n");
     if (map_pwm() == 0) fail("oops\n");
     if (map_dma() == 0) fail("oops\n");
@@ -59,28 +54,25 @@ int main(int argc, char *argv[])
         fail("error: failed to map clk registers\n");
     if (map_smi() == 0) fail("oops\n");
 
-    //map_periph(&spi_regs, (void *)SPI0_BASE, PAGE_SIZE);
+    // set LED pin as output, pull high
+    gpio_set(LED_PIN, GPIO_OUT, 1);
 
     printf("enable dma\n");
     enable_dma(DMA_CHAN);
 
-    // Set LED pin as output, and set high
-    printf("setup gpio\n");
-    gpio_mode(LED_PIN, GPIO_OUT);
-    gpio_out(LED_PIN, 1);
-
     // Use mailbox to get uncached memory for DMA decriptors and buffers
     printf("use mailbox\n");
-    mbox_fd = open_mbox();
-    if (mbox_fd < 0) 
-    {
-        fail("error: failed to open mailbox\n");
-    }
-    if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
-        (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
-        (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)
-            fail("error: can't allocate uncached memory\n");
-    printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
+    // mbox_fd = open_mbox();
+    // if (mbox_fd < 0) 
+    // {
+    //     fail("error: failed to open mailbox\n");
+    // }
+    // if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
+    //     (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
+    //     (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)
+    //         fail("error: can't allocate uncached memory\n");
+    // printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
+    if (map_uncached_mem(&dma_mem, DMA_MEM_SIZE) == 0) fail ("oops\n");
 
     // Run DMA tests
     printf("run tests\n");
@@ -99,7 +91,7 @@ int main(int argc, char *argv[])
 int dma_test_mem_transfer(void)
 {
     printf("test mem transfer\n");
-    DMA_CB *cbp = virt_dma_mem;
+    DMA_CB *cbp = dma_mem.virt; // virt_dma_mem;
     char *srce = (char *)(cbp+1);
     char *dest = srce + 0x100;
 
@@ -145,7 +137,7 @@ void dma_test_led_flash(int pin)
 {
     printf("test led flash\n");
 
-    DMA_CB *cbp=virt_dma_mem;
+    DMA_CB *cbp= dma_mem.virt; //virt_dma_mem;
     size_t *data = (size_t *)(cbp+1), n;
 
     printf("DMA test: flashing LED on GPIO pin %u\n", pin);
@@ -166,7 +158,7 @@ void dma_test_pwm_trigger(int pin)
 {
     printf("test pwm trigger\n");
 
-    DMA_CB *cbs=virt_dma_mem;
+    DMA_CB *cbs= dma_mem.virt; //virt_dma_mem;
     size_t n, *pindata=(size_t *)(cbs+4), *pwmdata=pindata+1;
 
     printf("DMA test: PWM trigger, ctrl-C to exit\n");
