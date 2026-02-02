@@ -187,8 +187,7 @@ void dma_test_pwm_trigger(int pin)
     for (n=0; n<4; n++)
         cbs[n].next_cb = MEM_BUS_ADDR(&dma_regs, &cbs[(n+1)%4]);
     // Enable PWM with data threshold 1, and DMA
-    init_pwm(PWM_FREQ, PWM_RANGE, PWM_RANGE/2); // this SEGFAULS
-    printf("!\n");
+    init_pwm(PWM_FREQ, PWM_RANGE, PWM_RANGE/2);
     *REG32(pwm_regs, PWM_DMAC) = PWM_DMAC_ENAB|1;
     start_pwm();
     start_dma(&dma_regs, DMA_CHAN, &cbs[0], 0);
