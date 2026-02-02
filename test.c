@@ -58,11 +58,11 @@ int main(int argc, char *argv[])
 
     // flash LED
     gpio_out(LED_PIN, 1);
-    sleep(1);
+    usleep(500*1000);
     gpio_out(LED_PIN, 0);
-    sleep(1);
+    usleep(500*1000);
     gpio_out(LED_PIN, 1);
-    sleep(1);
+    usleep(500*1000);
     gpio_out(LED_PIN, 0);
 
     // get uncached memory for DMA decriptors and buffers
