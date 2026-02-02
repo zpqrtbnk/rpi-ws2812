@@ -480,11 +480,33 @@ void terminate(int sig)
 
 // ----- GPIO -----
 
+// Set input or output with pullups
+void gpio_set(int pin, int mode, int pull)
+{
+    gpio_mode(pin, mode);
+    gpio_pull(pin, pull);
+}
+
+// Set ping pullup or pulldown
+void gpio_pull(int pin, int pull)
+{
+    volatile uint32_t *reg = REG32(gpio_regs, GPIO_GPPUDCLK0) + pin / 32;
+    debug("set gpio pin %d pull %d (%p)\n", pin, pull, reg);
+
+    *REG32(gpio_regs, GPIO_GPPUD) = pull;
+    usleep(2);
+    *reg = 1 << (pin % 32);
+    usleep(2);
+    *REG32(gpio_regs, GPIO_GPPUD) = 0;
+    *reg = 0;
+}
+
 // Set input or output
 void gpio_mode(int pin, int mode)
 {
-    uint32_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin/10;
-    printf("set gpio pin %d mode %d (%p)\n", pin, mode, reg);
+    volatile uint32_t *reg = VIRT_GPIO_REG(GPIO_MODE0) + pin/10;
+    debug("set gpio pin %d mode %d (%p)\n", pin, mode, reg);
+
     uint32_t shift = (pin % 10) * 3;
     *reg = (*reg & ~(7 << shift)) | (mode << shift);
 }
@@ -492,16 +514,20 @@ void gpio_mode(int pin, int mode)
 // Set an O/P pin
 void gpio_out(int pin, int val)
 {
-    uint32_t *reg = VIRT_GPIO_REG(val ? GPIO_SET0 : GPIO_CLR0) + pin/32;
-    printf("set gpio pin %d value %d (%p)\n", pin, val, reg);
+    volatile uint32_t *reg = VIRT_GPIO_REG(val ? GPIO_SET0 : GPIO_CLR0) + pin/32;
+    debug("set gpio pin %d value %d (%p)\n", pin, val, reg);
+
     *reg = 1 << (pin % 32);
 }
 
 // Get an I/P pin value
 uint8_t gpio_in(int pin)
 {
-    uint32_t *reg = VIRT_GPIO_REG(GPIO_LEV0) + pin/32;
-    return (((*reg) >> (pin % 32)) & 1);
+    volatile uint32_t *reg = VIRT_GPIO_REG(GPIO_LEV0) + pin/32;
+    uint8_t val = (((*reg) >> (pin % 32)) & 1);
+    debug("get gpio pin %d value %d (%p)\n", pin, val, reg);
+    
+    return val;
 }
 
 // ----- VIDEOCORE MAILBOX -----
@@ -702,25 +728,27 @@ void unmap_segment(void *mem, int size)
 // Enable and reset DMA
 void enable_dma(void)
 {
+    debug("enable dma\n");
     *VIRT_DMA_REG(DMA_ENABLE) |= (1 << DMA_CHAN);
     *VIRT_DMA_REG(DMA_CS) = 1 << 31;
+    debug("  enabled\n");
 }
 
 // Start DMA, given first control block
 void start_dma(DMA_CB *cbp)
 {
-    printf("start dma\n");
+    debug("start dma\n");
     *VIRT_DMA_REG(DMA_CONBLK_AD) = BUS_DMA_MEM(cbp);
     *VIRT_DMA_REG(DMA_CS) = 2;       // Clear 'end' flag
     *VIRT_DMA_REG(DMA_DEBUG) = 7;    // Clear error bits
     *VIRT_DMA_REG(DMA_CS) = 1;       // Start DMA
-    printf("  started\n");
+    debug("  started\n");
 }
 
 // Halt current DMA operation by resetting controller
 void stop_dma(void)
 {
-    printf("stop dma\n");
+    debug("stop dma\n");
     if (virt_dma_regs)
         *VIRT_DMA_REG(DMA_CS) = 1 << 31;
 }
