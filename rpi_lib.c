@@ -411,15 +411,15 @@ void disp_dma(int chan)
 // Initialise PWM
 void init_pwm(int freq, int range, int val)
 {
-    printf("!\n")
+    printf("!\n");
     stop_pwm();
-    printf("!\n")
+    printf("!\n");
     if (*REG32(pwm_regs, PWM_STA) & 0x100)
     {
         printf("PWM bus error\n");
         *REG32(pwm_regs, PWM_STA) = 0x100;
     }
-    printf("!\n")
+    printf("!\n");
 #if USE_VC_CLOCK_SET
     set_vc_clock(mbox_fd, PWM_CLOCK_ID, freq);
 #else
@@ -430,7 +430,7 @@ void init_pwm(int freq, int range, int val)
     *REG32(clk_regs, CLK_PWM_CTL) = CLK_PASSWD | 6 | (1 << 4);
     while ((*REG32(clk_regs, CLK_PWM_CTL) & (1 << 7)) == 0) ;
 #endif
-    printf("!\n")
+    printf("!\n");
     usleep(100);
     *REG32(pwm_regs, PWM_RNG1) = range;
     *REG32(pwm_regs, PWM_FIF1) = val;
