@@ -36,7 +36,7 @@
 #define BUS_REG_BASE    0x7E000000
 
 // If non-zero, print debug information
-#define DEBUG           0
+#define DEBUG           1
 
 #if DEBUG
 #define debug printf
