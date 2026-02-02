@@ -74,6 +74,9 @@ typedef struct {
     void *phys;   // Physical address
 } MEM_MAP;
 
+// Virtual memory pointers to acceess GPIO, DMA and PWM from user space
+extern MEM_MAP pwm_regs, gpio_regs, dma_regs, clk_regs;
+
 // Get virtual 8 and 32-bit pointers to register
 #define REG8(m, x)  ((volatile uint8_t *) ((size_t)(m.virt) + (size_t)(x)))
 #define REG32(m, x) ((volatile uint32_t *)((size_t)(m.virt) + (size_t)(x)))
@@ -201,10 +204,8 @@ typedef struct {
 #define PWM_CLOCK_ID    0xa
 
 // FIXME
-// rename this file rpi.c
 // use it as a lib, rename funcs gpio_ mbox_ vc_ dma_ pwm_
 
-void fail(char *s);
 void *map_periph(MEM_MAP *mp, void *phys, int size);
 void *map_uncached_mem(MEM_MAP *mp, int size);
 void unmap_periph_mem(MEM_MAP *mp);

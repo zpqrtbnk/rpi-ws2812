@@ -26,13 +26,6 @@ void terminate(int sig);
 // Size of uncached memory for DMA control blocks and data
 #define DMA_MEM_SIZE PAGE_SIZE
 
-// Virtual memory pointers to acceess regs from user space
-//void *virt_gpio_regs, *virt_dma_regs, *virt_pwm_regs, *virt_clk_regs;
-
-// Virtual memory pointers to acceess GPIO, DMA & SPI from user space
-MEM_MAP gpio_regs, dma_regs, pwm_regs;
-//MEM_MAP vc_mem, spi_regs;
-
 // VC mailbox file descriptor & handle, and bus memory pointer
 int mbox_fd, dma_mem_h;
 void *bus_dma_mem;
@@ -50,17 +43,13 @@ int main(int argc, char *argv[])
 
     // Map GPIO, DMA and PWM registers into virtual mem (user space)
     printf("map registers\n");
-    map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE);
-    map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE);
-    map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE);
+    if (map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE) == 0)
+        fail("error: failed to map gpio registers");
+    if (map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE) == 0)
+        fail("error: failed to map dma registers");
+    if (map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE) == 0)
+        fail("error: failed to map pwm registers");
     //map_periph(&spi_regs, (void *)SPI0_BASE, PAGE_SIZE);
-
-    // Map GPIO, DMA and PWM registers into virtual mem (user space)
-    printf("map segments\n");
-    //virt_gpio_regs = map_segment((void *)GPIO_BASE, PAGE_SIZE);
-    //virt_dma_regs  = map_segment((void *)DMA_BASE,  PAGE_SIZE);
-    //virt_pwm_regs  = map_segment((void *)PWM_BASE,  PAGE_SIZE);
-    //virt_clk_regs  = map_segment((void *)CLK_BASE,  PAGE_SIZE);
 
     printf("enable dma\n");
     enable_dma(DMA_CHAN);
@@ -73,6 +62,10 @@ int main(int argc, char *argv[])
     // Use mailbox to get uncached memory for DMA decriptors and buffers
     printf("use mailbox\n");
     mbox_fd = open_mbox();
+    if (mbox_fd < 0) 
+    {
+        fail("error: failed to open mailbox\n");
+    }
     if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
         (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
         (virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE)) == 0)

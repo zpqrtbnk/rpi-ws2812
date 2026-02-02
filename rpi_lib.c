@@ -155,7 +155,9 @@ int open_mbox(void)
    int fd;
 
    if ((fd = open("/dev/vcio", 0)) < 0)
-       fail("error: can't open VC mailbox\n");
+   {
+       printf("error: can't open VC mailbox\n");
+   }
    return fd;
 }
 
@@ -312,7 +314,10 @@ void *map_segment(void *addr, int size)
     debug("mapping %d at %p\n", size, (void *)addr);
 
     if ((fd = open ("/dev/mem", O_RDWR|O_SYNC|O_CLOEXEC)) < 0)
-        fail("error: can't open /dev/mem, run using sudo\n");
+    {
+        printf("error: can't open /dev/mem, are you root?\n");
+        return 0;
+    }
 
     mem = mmap(
         0, // any address in our space will do
@@ -328,7 +333,10 @@ void *map_segment(void *addr, int size)
     debug("  mapped %p -> %p\n", (void *)addr, mem);
 
     if (mem == MAP_FAILED)
-        fail("error: can't map memory\n");
+    {
+        printf("error: failed to map memory\n");
+        return 0;
+    }
 
     return mem;
 }
