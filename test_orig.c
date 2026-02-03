@@ -110,7 +110,6 @@ void enable_dma(void);
 void start_dma(DMA_CB *cbp);
 void stop_dma(void);
 void disp_dma(void);
-void strxcpy(char *src, char *dst, int len);
 
 // Main program
 int main(int argc, char *argv[])
@@ -169,14 +168,6 @@ int dma_test_mem_transfer(void)
     printf("result\n");
     printf("DMA test: %s\n", ddest[0] ? ddest : "failed");
     return(ddest[0] != 0);
-}
-
-void strxcpy(char *src, char *dst, int len)
-{
-    // for alignment (?) reasons strcpy and strncpy bus-err on string access
-    int i = 0;
-    for (; i < len && *(src+i) != 0; i++) *(dst+i) = *(src+i);
-    for (; i < len; i++) *(dst+i) = 0;
 }
 
 // Free memory segments and exit
