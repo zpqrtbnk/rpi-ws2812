@@ -1,4 +1,12 @@
 
+STATUS
+
+orig/rpi_dma_test.c is passing DMA and flashing the LED
+test.c is *not* passing DMA and thus not flashing anything
+
+orig/rpi_dma_min.c is passing and is strictly DMA (bare minimum)
+and we should compare it with the test.c version and figure out the diff
+
 CODE
 
 dma_test.c = DMA tests

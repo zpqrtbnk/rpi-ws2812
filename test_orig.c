@@ -93,8 +93,6 @@ void *virt_dma_mem;
 #define fail(x) {printf(x); terminate(0);}
 
 int dma_test_mem_transfer(void);
-void dma_test_led_flash(int pin);
-void dma_test_pwm_trigger(int pin);
 void terminate(int sig);
 int open_mbox(void);
 void close_mbox(int fd);
@@ -121,7 +119,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, terminate);
 
     printf("map segments\n");
-    virt_dma_regs  = map_segment((void *)DMA_BASE,  PAGE_SIZE);
+    virt_dma_regs  = map_segment((void *)DMA_BASE, PAGE_SIZE);
 
     printf("enable dma\n");
     enable_dma();
@@ -183,7 +181,6 @@ void strxcpy(char *src, char *dst, int len)
 void terminate(int sig)
 {
     printf("Closing\n");
-    stop_pwm();
     stop_dma();
     unmap_segment(virt_dma_mem, DMA_MEM_SIZE);
     unlock_vc_mem(mbox_fd, dma_mem_h);

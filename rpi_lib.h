@@ -90,7 +90,7 @@ typedef struct {
 #define REG32(m, x) ((volatile uint32_t *)((size_t)(m.virt) + (size_t)(x)))
 
 // Get bus address of register
-#define REG_BUS_ADDR(m, x)  ((size_t)(m.bus)  + (size_t)(x))
+#define REG_BUS_ADDR(m, x)  ((size_t)(m.bus) + (size_t)(x))
 // Convert uncached memory virtual address to bus address
 #define MEM_BUS_ADDR(mp, a) ((size_t)a - (size_t)(mp)->virt + (size_t)(mp)->bus)
 // Convert bus address to physical address (for mmap)
