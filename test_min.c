@@ -94,7 +94,6 @@ void terminate(int sig)
     printf("closing\n");
 
     stop_dma(DMA_CHAN);
-
     unmap_dma();
     unmap_mem(&dma_mem);
 

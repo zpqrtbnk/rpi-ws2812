@@ -179,11 +179,10 @@ void terminate(int sig)
 
     stop_dma();
     unmap_segment(virt_dma_mem, DMA_MEM_SIZE);
-
     unlock_vc_mem(mbox_fd, dma_mem_h);
     free_vc_mem(mbox_fd, dma_mem_h);
     close_mbox(mbox_fd);
-    unmap_segment(virt_dma_regs, PAGE_SIZE);
+    
     exit(0);
 }
 
