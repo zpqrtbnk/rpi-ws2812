@@ -10,6 +10,8 @@
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
+#include "utils.h"
+
 #define PHYS_REG_BASE    0x3F000000
 #define BUS_REG_BASE     0x7E000000
 
