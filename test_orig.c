@@ -89,11 +89,12 @@ void *virt_dma_mem;
 
 #define BUS_DMA_MEM(a)  ((size_t)a-(size_t)virt_dma_mem+(size_t)bus_dma_mem)
 
-#define FAIL(x) {printf(x); terminate(0);}
 #define fail(x) {printf(x); terminate(0);}
 
-int dma_test_mem_transfer(void);
 void terminate(int sig);
+
+int dma_test_mem_transfer(void);
+
 int open_mbox(void);
 void close_mbox(int fd);
 uint32_t msg_mbox(int fd, VC_MSG *msgp);

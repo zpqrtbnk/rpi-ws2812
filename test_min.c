@@ -20,6 +20,7 @@
 #include "rpi_dma.h"
 
 #define fail(x) {printf(x); terminate(0);}
+
 void terminate(int sig);
 
 int dma_test_mem_transfer(void);
@@ -52,7 +53,7 @@ int main(int argc, char *argv[])
 
     // run tests
     printf("run tests\n");
-    if (dma_test_mem_transfer() == 0) fail("oops\n"); // FIXME that fails
+    if (dma_test_mem_transfer() == 0) fail("oops\n");
 
     // over and out
     printf("terminate\n");
