@@ -83,7 +83,7 @@ typedef struct {
         unused;
 } DMA_CB __attribute__ ((aligned(32)));
 #define DMA_CB_DEST_INC (1<<4)
-#define DMA_CB_SRC_INC  (1<<8)
+#define DMA_CB_SRCE_INC (1<<8)
 
 void *virt_dma_mem;
 
@@ -114,17 +114,18 @@ void strxcpy(char *src, char *dst, int len);
 // Main program
 int main(int argc, char *argv[])
 {
-    printf("dma-test\n");
+    printf("configure\n");
 
+    // cleanup if user hits ctrl-C
     signal(SIGINT, terminate);
 
-    printf("map segments\n");
+    // map registers into user space virtual mem
     virt_dma_regs  = map_segment((void *)DMA_BASE, PAGE_SIZE);
 
-    printf("enable dma\n");
+    // enable dma
     enable_dma();
 
-    printf("use mailbox\n");
+    // get uncached memory for DMA decriptors and buffers
     mbox_fd = open_mbox();
     if ((dma_mem_h = alloc_vc_mem(mbox_fd, DMA_MEM_SIZE, DMA_MEM_FLAGS)) <= 0 ||
         (bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h)) == 0 ||
@@ -132,11 +133,11 @@ int main(int argc, char *argv[])
             FAIL("ERROR: can't allocate uncached memory\n");
     printf("vc mem handle=%u, phys=%p, virt=%p\n", dma_mem_h, bus_dma_mem, virt_dma_mem);
 
-    // Run DMA tests
+    // run tests
     printf("run tests\n");
     dma_test_mem_transfer();
 
-    // Over and out
+    // over and out
     printf("terminate\n");
     terminate(0);
 }
@@ -151,7 +152,7 @@ int dma_test_mem_transfer(void)
 
     strxcpy("memory transfer OK", srce, 20);
     memset(cbp, 0, sizeof(DMA_CB));
-    cbp->ti = DMA_CB_SRC_INC | DMA_CB_DEST_INC;
+    cbp->ti = DMA_CB_SRCE_INC | DMA_CB_DEST_INC;
     cbp->srce_ad = BUS_DMA_MEM(srce);
     cbp->dest_ad = BUS_DMA_MEM(dest);
     cbp->tfr_len = strlen(srce) + 1;
@@ -180,9 +181,11 @@ void strxcpy(char *src, char *dst, int len)
 // Free memory segments and exit
 void terminate(int sig)
 {
-    printf("Closing\n");
+    printf("closing\n");
+
     stop_dma();
     unmap_segment(virt_dma_mem, DMA_MEM_SIZE);
+
     unlock_vc_mem(mbox_fd, dma_mem_h);
     free_vc_mem(mbox_fd, dma_mem_h);
     close_mbox(mbox_fd);

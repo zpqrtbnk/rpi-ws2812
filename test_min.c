@@ -23,8 +23,6 @@
 void terminate(int sig);
 
 int dma_test_mem_transfer(void);
-void dma_test_led_flash(int pin);
-void dma_test_pwm_trigger(int pin);
 
 #define DMA_CHAN 5
 #define LED_PIN 21
@@ -94,7 +92,6 @@ void terminate(int sig)
 {
     printf("closing\n");
 
-    stop_pwm();
     stop_dma(DMA_CHAN);
 
     unmap_dma();
