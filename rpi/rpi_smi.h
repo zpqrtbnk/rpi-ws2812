@@ -1,7 +1,5 @@
 // 
 
-#include "rpi_dma.h"
-
 extern MEM_MAP smi_regs;
 
 // Register definitions
