@@ -113,7 +113,7 @@ void terminate(int sig);
 void rgb_txdata(int *rgbs, TXDATA_T *txd);
 int str_rgb(char *s, int rgbs[][LED_NCHANS], int chan);
 void map_devices(void);
-//void init_smi(int width, int ns, int setup, int hold, int strobe);
+void init_smi(int width, int ns, int setup, int hold, int strobe);
 void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp);
 void start_smi(MEM_MAP *mp, int chan);
 
