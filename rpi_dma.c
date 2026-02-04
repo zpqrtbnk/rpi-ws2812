@@ -41,7 +41,7 @@ void enable_dma(int chan)
 // Start DMA, given first control block
 void start_dma(MEM_MAP *mp, int chan, DMA_CB *cbp, uint32_t csval)
 {
-    debug("DMA %d %d %d %d %d %d", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb);
+    debug("DMA %d %x %x %d %d %d", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb);
 
     debug("dma chan=%d start", chan);
     *REG32(dma_regs, DMA_REG(chan, DMA_CONBLK_AD)) = MEM_BUS_ADDR(mp, cbp);
