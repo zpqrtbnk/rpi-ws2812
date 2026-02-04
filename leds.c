@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     swap_bytes(tx_test_data, sizeof(tx_test_data));
 #endif
     memcpy(txdata, tx_test_data, sizeof(tx_test_data));
-    start_smi(&vc_mem);
+    start_smi(&vc_mem, DMA_CHAN);
     usleep(10);
     while (dma_active(DMA_CHAN))
         usleep(10);
@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
             memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
-            start_smi(&vc_mem);
+            start_smi(&vc_mem, DMA_CHAN);
             usleep(CHASE_MSEC * 1000);
         }
     }
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
 #endif
         memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
         enable_dma(DMA_CHAN);
-        start_smi(&vc_mem);
+        start_smi(&vc_mem, DMA_CHAN);
         usleep(10);
         while (dma_active(DMA_CHAN))
             usleep(10);
@@ -251,10 +251,6 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
         txd += BIT_NPULSES;
     }
 }
-
-
-
-
 
 // Map GPIO, DMA and SMI registers into virtual mem (user space)
 // If any of these fail, program will be terminated

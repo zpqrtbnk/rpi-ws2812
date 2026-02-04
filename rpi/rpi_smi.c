@@ -82,7 +82,7 @@ void init_smi(int width, int ns, int setup, int strobe, int hold)
 }
 
 // Set up SMI transfers using DMA
-void setup_smi_dma(MEM_MAP *mp, int nsamp)
+void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp)
 {
     DMA_CB *cbs=mp->virt;
 
@@ -93,7 +93,7 @@ void setup_smi_dma(MEM_MAP *mp, int nsamp)
     smi_cs->pxldat = 1;
     smi_l->len = nsamp * sizeof(TXDATA_T);
     smi_cs->write = 1;
-    enable_dma(DMA_CHAN);
+    enable_dma(chan);
     cbs[0].ti = DMA_DEST_DREQ | (DMA_SMI_DREQ << 16) | DMA_CB_SRCE_INC | DMA_WAIT_RESP;
     cbs[0].tfr_len = nsamp * sizeof(TXDATA_T);
     cbs[0].srce_ad = MEM_BUS_ADDR(mp, txdata);
@@ -101,11 +101,11 @@ void setup_smi_dma(MEM_MAP *mp, int nsamp)
 }
 
 // Start SMI DMA transfers
-void start_smi(MEM_MAP *mp)
+void start_smi(MEM_MAP *mp, int chan)
 {
     DMA_CB *cbs=mp->virt;
 
-    start_dma(mp, DMA_CHAN, &cbs[0], 0);
+    start_dma(mp, chan, &cbs[0], 0);
     smi_cs->start = 1;
 }
 
