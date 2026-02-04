@@ -41,13 +41,13 @@
 
 #include "utils.h"
 
-#include "rpi_lib.h"
-#include "rpi_gpio.h"
-#include "rpi_smi.h"
-#include "rpi_pwm.h"
-#include "rpi_vc.h"
-#include "rpi_vm.h"
-#include "rpi_dma.h"
+#include "rpi/rpi_lib.h"
+#include "rpi/rpi_gpio.h"
+#include "rpi/rpi_smi.h"
+#include "rpi/rpi_pwm.h"
+#include "rpi/rpi_vc.h"
+#include "rpi/rpi_vm.h"
+#include "rpi/rpi_dma.h"
 
 #if PHYS_REG_BASE==PI_4_REG_BASE        // Timings for RPi v4 (1.5 GHz)
 #define SMI_TIMING       10, 15, 30, 15    // 400 ns cycle time

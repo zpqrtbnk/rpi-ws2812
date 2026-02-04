@@ -11,13 +11,13 @@
 
 #include "utils.h"
 
-#include "rpi_lib.h"
-#include "rpi_gpio.h"
-#include "rpi_smi.h"
-#include "rpi_pwm.h"
-#include "rpi_vc.h"
-#include "rpi_vm.h"
-#include "rpi_dma.h"
+#include "rpi/rpi_lib.h"
+#include "rpi/rpi_gpio.h"
+#include "rpi/rpi_smi.h"
+#include "rpi/rpi_pwm.h"
+#include "rpi/rpi_vc.h"
+#include "rpi/rpi_vm.h"
+#include "rpi/rpi_dma.h"
 
 #define fail(x) {printf(x); terminate(0);}
 
