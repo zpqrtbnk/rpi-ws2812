@@ -20,6 +20,7 @@
 #include "rpi_dma.h"
 
 #define fail(x) {printf(x); terminate(0);}
+
 void terminate(int sig);
 
 int dma_test_mem_transfer(void);
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
 
     // run tests
     printf("run tests\n");
-    if (dma_test_mem_transfer() == 0) fail("oops\n"); // FIXME that fails
+    if (dma_test_mem_transfer() == 0) fail("oops\n");
     dma_test_led_flash(LED_PIN);
     dma_test_pwm_trigger(LED_PIN);
 
@@ -90,10 +91,11 @@ int dma_test_mem_transfer(void)
     strxcpy("memory transfer OK", srce, 20);
     memset(cbp, 0, sizeof(DMA_CB));
     cbp->ti = DMA_CB_SRCE_INC | DMA_CB_DEST_INC;
-    cbp->srce_ad = MEM_BUS_ADDR(&dma_regs, srce);
-    cbp->dest_ad = MEM_BUS_ADDR(&dma_regs, dest);
+    cbp->srce_ad = MEM_BUS_ADDR(&dma_mem, srce);
+    cbp->dest_ad = MEM_BUS_ADDR(&dma_mem, dest);
     cbp->tfr_len = strlen(srce) + 1;
-    start_dma(&dma_regs, DMA_CHAN, cbp, 0);
+
+    start_dma(&dma_mem, DMA_CHAN, cbp, 0);
     usleep(10);
 
     disp_dma(DMA_CHAN);
