@@ -121,7 +121,7 @@ void dma_test_led_flash(int pin)
     memset(cbp, 0, sizeof(DMA_CB));
     *data = 1 << pin;
     cbp->tfr_len = 4;
-    cbp->srce_ad = MEM_BUS_ADDR((&dma_regs), data);
+    cbp->srce_ad = MEM_BUS_ADDR((&dma_mem), data);
     for (n=0; n<16; n++)
     {
         usleep(200000);
@@ -149,13 +149,13 @@ void dma_test_pwm_trigger(int pin)
     cbs[0].tfr_len = cbs[2].tfr_len = 4;
     *pindata = 1 << pin;
     // Control block 1 and 3: update PWM FIFO (to clear DMA request)
-    cbs[1].srce_ad = cbs[3].srce_ad = MEM_BUS_ADDR(&dma_regs, pwmdata);
+    cbs[1].srce_ad = cbs[3].srce_ad = MEM_BUS_ADDR(&dma_mem, pwmdata);
     cbs[1].dest_ad = cbs[3].dest_ad = REG_BUS_ADDR(pwm_regs, PWM_FIF1);
     cbs[1].tfr_len = cbs[3].tfr_len = 4;
     *pwmdata = PWM_RANGE / 2;
     // Link control blocks 0 to 3 in endless loop
     for (n=0; n<4; n++)
-        cbs[n].next_cb = MEM_BUS_ADDR(&dma_regs, &cbs[(n+1)%4]);
+        cbs[n].next_cb = MEM_BUS_ADDR(&dma_mem, &cbs[(n+1)%4]);
     // Enable PWM with data threshold 1, and DMA
     init_pwm(PWM_FREQ, PWM_RANGE, PWM_RANGE/2);
     *REG32(pwm_regs, PWM_DMAC) = PWM_DMAC_ENAB|1;
