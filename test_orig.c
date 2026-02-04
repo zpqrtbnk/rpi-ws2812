@@ -182,7 +182,7 @@ void terminate(int sig)
     unlock_vc_mem(mbox_fd, dma_mem_h);
     free_vc_mem(mbox_fd, dma_mem_h);
     close_mbox(mbox_fd);
-    
+
     exit(0);
 }
 
@@ -412,12 +412,12 @@ void stop_dma(void)
 // Display DMA registers
 void disp_dma(void)
 {
-    size_t *p=(size_t *)VIRT_DMA_REG(DMA_CS);
+    uint32_t *p=(uint32_t *)VIRT_DMA_REG(DMA_CS);
     int i=0;
 
     while (dma_regstrs[i][0])
     {
-        printf("%-7s %08lX ", dma_regstrs[i++], *p++);
+        printf("%-7s %08X ", dma_regstrs[i++], *p++);
         if (i%5==0 || dma_regstrs[i][0]==0)
             printf("\n");
     }
