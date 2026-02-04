@@ -143,7 +143,7 @@ void dma_test_pwm_trigger(int pin)
     // Transfers are triggered by PWM request
     cbs[0].ti = cbs[1].ti = cbs[2].ti = cbs[3].ti = (1 << 6) | (DMA_PWM_DREQ << 16);
     // Control block 0 and 2: clear & set LED pin, 4-byte transfer
-    cbs[0].srce_ad = cbs[2].srce_ad = MEM_BUS_ADDR(&dma_regs, pindata);
+    cbs[0].srce_ad = cbs[2].srce_ad = MEM_BUS_ADDR(&dma_mem, pindata);
     cbs[0].dest_ad = REG_BUS_ADDR(gpio_regs, GPIO_CLR0);
     cbs[2].dest_ad = REG_BUS_ADDR(gpio_regs, GPIO_SET0);
     cbs[0].tfr_len = cbs[2].tfr_len = 4;
