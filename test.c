@@ -11,13 +11,13 @@
 
 #include "utils.h"
 
-#include "rpi_lib.h"
-#include "rpi_gpio.h"
-#include "rpi_smi.h"
-#include "rpi_pwm.h"
-#include "rpi_vc.h"
-#include "rpi_vm.h"
-#include "rpi_dma.h"
+#include "rpi/rpi_lib.h"
+#include "rpi/rpi_gpio.h"
+#include "rpi/rpi_smi.h"
+#include "rpi/rpi_pwm.h"
+#include "rpi/rpi_vc.h"
+#include "rpi/rpi_vm.h"
+#include "rpi/rpi_dma.h"
 
 #define fail(x) {printf(x); terminate(0);}
 
@@ -126,7 +126,7 @@ void dma_test_led_flash(int pin)
     {
         usleep(200000);
         cbp->dest_ad = REG_BUS_ADDR(gpio_regs, n&1 ? GPIO_CLR0 : GPIO_SET0);
-        start_dma(&dma_regs, DMA_CHAN, cbp, 0);
+        start_dma(&dma_mem, DMA_CHAN, cbp, 0);
     }
 }
 
@@ -160,7 +160,7 @@ void dma_test_pwm_trigger(int pin)
     init_pwm(PWM_FREQ, PWM_RANGE, PWM_RANGE/2);
     *REG32(pwm_regs, PWM_DMAC) = PWM_DMAC_ENAB|1;
     start_pwm();
-    start_dma(&dma_regs, DMA_CHAN, &cbs[0], 0);
+    start_dma(&dma_mem, DMA_CHAN, &cbs[0], 0);
     // Nothing to do while LED is flashing
     sleep(4);
 }
