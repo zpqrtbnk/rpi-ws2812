@@ -113,7 +113,7 @@ void terminate(int sig);
 void rgb_txdata(int *rgbs, TXDATA_T *txd);
 int str_rgb(char *s, int rgbs[][LED_NCHANS], int chan);
 void map_devices(void);
-void init_smi(int width, int ns, int setup, int hold, int strobe);
+//void init_smi(int width, int ns, int setup, int hold, int strobe);
 void setup_smi_dma(MEM_MAP *mp, int nsamp);
 void start_smi(MEM_MAP *mp);
 
@@ -152,10 +152,17 @@ int main(int argc, char *argv[])
             chan_num++;
         }
     }
+
     signal(SIGINT, terminate);
-    map_devices();
+
+    if (map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE) == 0) fail("oops\n");
+    if (map_periph(&dma_regs,  (void *)DMA_BASE, PAGE_SIZE) == 0) fail("oops\n");
+    if (map_periph(&clk_regs,  (void *)CLK_BASE, PAGE_SIZE) == 0) fail("oops\n");
+    if (map_periph(&smi_regs,  (void *)SMI_BASE, PAGE_SIZE) == 0) fail("oops\n");
+
     init_smi(LED_NCHANS>8 ? SMI_16_BITS : SMI_8_BITS, SMI_TIMING);
     map_uncached_mem(&vc_mem, VC_MEM_SIZE);
+    
 #if TX_TEST
     oset = oset;
     setup_smi_dma(&vc_mem, sizeof(tx_test_data)/sizeof(TXDATA_T));
@@ -252,14 +259,32 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
     }
 }
 
-// Map GPIO, DMA and SMI registers into virtual mem (user space)
-// If any of these fail, program will be terminated
-void map_devices(void)
+// Set up SMI transfers using DMA
+void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp)
 {
-    if (map_periph(&gpio_regs, (void *)GPIO_BASE, PAGE_SIZE) == 0) fail("oops\n");
-    if (map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE) == 0) fail("oops\n");
-    if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0) fail("oops\n");
-    if (map_periph(&smi_regs, (void *)SMI_BASE, PAGE_SIZE) == 0) fail("oops\n");
+    DMA_CB *cbs=mp->virt;
+
+    txdata = (TXDATA_T *)(cbs+1);
+    smi_dmc->dmaen = 1;
+    smi_cs->enable = 1;
+    smi_cs->clear = 1;
+    smi_cs->pxldat = 1;
+    smi_l->len = nsamp * sizeof(TXDATA_T);
+    smi_cs->write = 1;
+    enable_dma(chan);
+    cbs[0].ti = DMA_DEST_DREQ | (DMA_SMI_DREQ << 16) | DMA_CB_SRCE_INC | DMA_WAIT_RESP;
+    cbs[0].tfr_len = nsamp * sizeof(TXDATA_T);
+    cbs[0].srce_ad = MEM_BUS_ADDR(mp, txdata);
+    cbs[0].dest_ad = REG_BUS_ADDR(smi_regs, SMI_D);
+}
+
+// Start SMI DMA transfers
+void start_smi(MEM_MAP *mp, int chan)
+{
+    DMA_CB *cbs=mp->virt;
+
+    start_dma(mp, chan, &cbs[0], 0);
+    smi_cs->start = 1;
 }
 
 // Free memory segments and exit

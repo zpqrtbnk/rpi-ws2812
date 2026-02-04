@@ -81,32 +81,5 @@ void init_smi(int width, int ns, int setup, int strobe, int hold)
         gpio_mode(LED_D0_PIN+i, GPIO_ALT1);
 }
 
-// Set up SMI transfers using DMA
-void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp)
-{
-    DMA_CB *cbs=mp->virt;
-
-    txdata = (TXDATA_T *)(cbs+1);
-    smi_dmc->dmaen = 1;
-    smi_cs->enable = 1;
-    smi_cs->clear = 1;
-    smi_cs->pxldat = 1;
-    smi_l->len = nsamp * sizeof(TXDATA_T);
-    smi_cs->write = 1;
-    enable_dma(chan);
-    cbs[0].ti = DMA_DEST_DREQ | (DMA_SMI_DREQ << 16) | DMA_CB_SRCE_INC | DMA_WAIT_RESP;
-    cbs[0].tfr_len = nsamp * sizeof(TXDATA_T);
-    cbs[0].srce_ad = MEM_BUS_ADDR(mp, txdata);
-    cbs[0].dest_ad = REG_BUS_ADDR(smi_regs, SMI_D);
-}
-
-// Start SMI DMA transfers
-void start_smi(MEM_MAP *mp, int chan)
-{
-    DMA_CB *cbs=mp->virt;
-
-    start_dma(mp, chan, &cbs[0], 0);
-    smi_cs->start = 1;
-}
 
 // eof
