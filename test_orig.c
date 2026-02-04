@@ -158,7 +158,7 @@ int dma_test_mem_transfer(void)
     cbp->srce_ad = BUS_DMA_MEM(srce);
     cbp->dest_ad = BUS_DMA_MEM(dest);
     cbp->tfr_len = strlen(srce) + 1;
-    debug("> start dma (%d %x %x %d %d %d) (%x %x)\n", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb, virt_dma_mem, bus_dma_mem);
+    debug("> start dma (%d %x %x %d %d %d) (%p %p)\n", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb, virt_dma_mem, bus_dma_mem);
     start_dma(cbp);
     usleep(10);
 

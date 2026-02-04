@@ -84,7 +84,7 @@ int dma_test_mem_transfer(void)
     // #define MEM_BUS_ADDR(mp, a) ((size_t)a - (size_t)(mp)->virt + (size_t)(mp)->bus)
     //
     // 
-    debug("> start dma (%d %x %x %d %d %d) (%x %x)\n", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb, dma_regs.virt, dma_regs.bus);
+    debug("> start dma (%d %x %x %d %d %d) (%p %p)\n", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb, dma_regs.virt, dma_regs.bus);
 
     start_dma(&dma_regs, DMA_CHAN, cbp, 0);
     usleep(10);
