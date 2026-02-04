@@ -100,7 +100,7 @@ REG_DEF(SMI_FLVL_REG, SMI_FLVL_FIELDS);
 void *map_smi();
 void unmap_smi();
 
-void init_smi(int width, int ns, int setup, int strobe, int hold);
+//void init_smi(int width, int ns, int setup, int strobe, int hold);
 //void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp);
 //void start_smi(MEM_MAP *mp, int chan);
 
