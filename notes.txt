@@ -2,6 +2,11 @@
 STATUS
 
 test.c is now passing all three tests, start working on leds.c = the SMI thing
+at one point... some LEDS were ON when I did plug them correctly
+and then running leds.c turned the first one OFF?
+but I cannot repro?
+
+ah running bin/leds -t = test mode DOES flash the first led!
 
 RP3A0
 
