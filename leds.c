@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 
 #if TX_TEST
     oset = oset;
-    setup_smi_dma(&vc_mem, sizeof(tx_test_data)/sizeof(TXDATA_T));
+    setup_smi_dma(&vc_mem, DMA_CHAN, sizeof(tx_test_data)/sizeof(TXDATA_T));
 #if LED_NCHANS <= 8
     swap_bytes(tx_test_data, sizeof(tx_test_data));
 #endif
