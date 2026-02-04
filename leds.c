@@ -53,20 +53,13 @@
 
 // get a 400ns cycle time
 #if WHAT_PI == PI_Z2
-// assume 1.5 GHz (what fq is that?)
-#define SMI_TIMING 10, 15, 30, 15
+// assume 1 GHz (what fq is that?)
+#define SMI_TIMING 10, 10, 20, 10
 #else
-// assume 1 GHz
-//#define SMI_TIMING 10, 10, 20, 10
+// assume 1.5 GHz
+//#define SMI_TIMING 10, 15, 30, 15
 #error meh
 #endif
-
-// FIXME adjust to ACTUAL pi model!
-// #if PHYS_REG_BASE==PI_4_REG_BASE        // Timings for RPi v4 (1.5 GHz)
-// #define SMI_TIMING       10, 15, 30, 15    // 400 ns cycle time
-// #else                                   // Timings for RPi v0-3 (1 GHz)
-// #define SMI_TIMING       10, 10, 20, 10   // 400 ns cycle time
-// #endif
 
 #define TX_TEST         0   // If non-zero, use dummy Tx data
 #define LED_D0_PIN      8   // GPIO pin for D0 output
@@ -83,29 +76,33 @@
 // Length of data for 1 row (1 LED on each channel)
 #define LED_DLEN        (LED_NBITS * BIT_NPULSES)
 
-// Transmit data type, 8 or 16 bits
+// transmit data type, 8 or 16 bits
+// each bit corresponds to one channel
 #if LED_NCHANS > 8
-#define TXDATA_T        uint16_t
+#define TXDATA_T uint16_t
 #else
-#define TXDATA_T        uint8_t
+#define TXDATA_T uint8_t
 #endif
 
 MEM_MAP vc_mem;
 
 // Ofset into Tx data buffer, given LED number in chan
-#define LED_TX_OSET(n)      (LED_PREBITS + (LED_DLEN * (n)))
+#define LED_TX_OFFSET(n)    (LED_PREBITS + (LED_DLEN * (n)))
 
 // Size of data buffers & NV memory, given number of LEDs per chan
-#define TX_BUFF_LEN(n)      (LED_TX_OSET(n) + LED_POSTBITS)
+#define TX_BUFF_LEN(n)      (LED_TX_OFFSET(n) + LED_POSTBITS)
 #define TX_BUFF_SIZE(n)     (TX_BUFF_LEN(n) * sizeof(TXDATA_T))
 #define VC_MEM_SIZE         (PAGE_SIZE + TX_BUFF_SIZE(CHAN_MAXLEDS))
 
 // RGB values for test mode (1 value for each of 16 channels)
-int on_rgbs[16] = {0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
-                  0xff4040, 0x40ff40, 0x4040ff, 0x404040,
-                  0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
-                  0xff4040, 0x40ff40, 0x4040ff, 0x404040};
-int off_rgbs[16];
+int on_rgbs[16] = {
+    //0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
+    0x0000ff, 0x00ff00, 0x0000ff, 0xffffff,
+    0xff4040, 0x40ff40, 0x4040ff, 0x404040,
+    0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
+    0xff4040, 0x40ff40, 0x4040ff, 0x404040
+};
+int off_rgbs[16]; // zeroes
 
 #if TX_TEST
 // Data for simple transmission test
@@ -132,7 +129,7 @@ void start_smi(MEM_MAP *mp, int chan);
 
 int main(int argc, char *argv[])
 {
-    int args=0, n, oset=0;
+    int args = 0, n, offset = 0;
 
     while (argc > ++args)               // Process command-line args
     {
@@ -176,59 +173,67 @@ int main(int argc, char *argv[])
     init_smi(LED_NCHANS>8 ? SMI_16_BITS : SMI_8_BITS, SMI_TIMING);
     map_uncached_mem(&vc_mem, VC_MEM_SIZE);
 
-#if TX_TEST
-    oset = oset;
-    setup_smi_dma(&vc_mem, DMA_CHAN, sizeof(tx_test_data)/sizeof(TXDATA_T));
-#if LED_NCHANS <= 8
-    swap_bytes(tx_test_data, sizeof(tx_test_data));
-#endif
-    memcpy(txdata, tx_test_data, sizeof(tx_test_data));
-    start_smi(&vc_mem, DMA_CHAN);
-    usleep(10);
-    while (dma_active(DMA_CHAN))
-        usleep(10);
-#else
+// #if TX_TEST
+//     oset = oset;
+//     setup_smi_dma(&vc_mem, DMA_CHAN, sizeof(tx_test_data)/sizeof(TXDATA_T));
+// #if LED_NCHANS <= 8
+//     swap_bytes(tx_test_data, sizeof(tx_test_data));
+// #endif
+//     memcpy(txdata, tx_test_data, sizeof(tx_test_data));
+//     start_smi(&vc_mem, DMA_CHAN);
+//     usleep(10);
+//     while (dma_active(DMA_CHAN))
+//         usleep(10);
+// #else
+
     setup_smi_dma(&vc_mem, DMA_CHAN, TX_BUFF_LEN(chan_ledcount));
-    printf("%s %u LED%s per channel, %u channels\n", testmode ? "Testing" : "Setting",
-           chan_ledcount, chan_ledcount==1 ? "" : "s", LED_NCHANS);
+
+    printf("%s %u LED%s per channel, %u channels\n", 
+        testmode ? "Testing" : "Setting",
+        chan_ledcount, 
+        chan_ledcount == 1 ? "" : "s", 
+        LED_NCHANS
+    );
+
     if (testmode)
     {
         while (1)
         {
             if (chan_ledcount < 2)
-                rgb_txdata(oset&1 ? off_rgbs : on_rgbs, tx_buffer);
+            {
+                rgb_txdata(offset & 1 ? off_rgbs : on_rgbs, tx_buffer);
+            }
             else
             {
                 for (n=0; n<chan_ledcount; n++)
                 {
-                    rgb_txdata(n==oset%chan_ledcount ? on_rgbs : off_rgbs,
-                               &tx_buffer[LED_TX_OSET(n)]);
+                    rgb_txdata(n==offset % chan_ledcount ? on_rgbs : off_rgbs,
+                               &tx_buffer[LED_TX_OFFSET(n)]);
                 }
             }
-            oset++;
+            offset++;
 #if LED_NCHANS <= 8
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
             memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
             start_smi(&vc_mem, DMA_CHAN);
             usleep(CHASE_MSEC * 1000);
+            // not waiting for DMA active?
         }
     }
     else
     {
-        for (n=0; n<chan_ledcount; n++)
-            rgb_txdata(rgb_data[n], &tx_buffer[LED_TX_OSET(n)]);
+        for (n = 0; n < chan_ledcount; n++)
+            rgb_txdata(rgb_data[n], &tx_buffer[LED_TX_OFFSET(n)]);
 #if LED_NCHANS <= 8
         swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
         memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
-        enable_dma(DMA_CHAN);
         start_smi(&vc_mem, DMA_CHAN);
         usleep(10);
-        while (dma_active(DMA_CHAN))
-            usleep(10);
+        while (dma_active(DMA_CHAN)) usleep(10);
     }
-#endif
+//#endif
     terminate(0);
     return(0);
 }
@@ -248,27 +253,36 @@ int str_rgb(char *s, int rgbs[][LED_NCHANS], int chan)
     return(i);
 }
 
-// Set Tx data for 8 or 16 chans, 1 LED per chan, given 1 RGB val per chan
-// Logic 1 is 0.8us high, 0.4 us low, logic 0 is 0.4us high, 0.8us low
+// populate a sequence of TXDATA_T for one set of RGB values (per channel)
+//
+// set tx data for 8 or 16 chans, 1 LED per chan, given 1 RGB val per chan
+// logic 1 is 0.8us high, 0.4 us low, logic 0 is 0.4us high, 0.8us low
+// so each txd[i] is .4 us
+// in theory a proper timing would be 1.25us total, but... this works?
 void rgb_txdata(int *rgbs, TXDATA_T *txd)
 {
     int i, n, msk;
 
-    // For each bit of the 24-bit RGB values..
-    for (n=0; n<LED_NBITS; n++)
+    // for each bit of the 24-bit RGB values
+    for (n = 0; n < LED_NBITS; n++)
     {
-        // Mask to convert RGB to GRB, M.S bit first
-        msk = n==0 ? 0x8000 : n==8 ? 0x800000 : n==16 ? 0x80 : msk>>1;
-        // 1st byte or word is a high pulse on all lines
-        txd[0] = (TXDATA_T)0xffff;
-        // 2nd has high or low bits from data
+        // mask to convert RGB to GRB, MSB first
+        msk = n == 0 ? 0x8000 : n == 8 ? 0x800000 : n == 16 ? 0x80 : msk >> 1;
+
+        // 1st byte or word is a high pulse on all channels
+        // 2nd has high (1) or low (0) bits from data
         // 3rd is a low pulse
+        txd[0] = (TXDATA_T) 0xffff;
         txd[1] = txd[2] = 0;
-        for (i=0; i<LED_NCHANS; i++)
+
+        // for each channel, set 2nd byte or word depending on rgb value
+        for (i = 0; i < LED_NCHANS; i++)
         {
-            if (rgbs[i] & msk)
-                txd[1] |= (1 << i);
+            if (rgbs[i] & msk) txd[1] |= (1 << i);
         }
+
+        // advance number of byte or word per bit
+        // (since we do txd[0-2] on each bit, do += 3) 
         txd += BIT_NPULSES;
     }
 }
