@@ -83,7 +83,22 @@ int dma_test_mem_transfer(void)
     // #define BUS_DMA_MEM(a)  ((size_t)a-(size_t)virt_dma_mem+(size_t)bus_dma_mem)
     // #define MEM_BUS_ADDR(mp, a) ((size_t)a - (size_t)(mp)->virt + (size_t)(mp)->bus)
     //
-    // 
+    // ah but...
+    // working, (0x7f84b78000 0xdeba5000)
+    // failing, (0x7fa558b000 0x7e007000) << second (bus) address is wrong?
+    //
+    // where is it coming from? from map_uncached_mem in rpi_vc.c
+    // mp->bus = lock_vc_mem(mp->fd, mp->h))
+    // mp->virt = map_segment(phys, mp->size);
+    // and
+    // lock_v -> return h ? (void*)((size_t)0 + msg_mbox(fd, &msg)) : 0;
+    //
+    // whereas working does
+    // bus_dma_mem = lock_vc_mem(mbox_fd, dma_mem_h))
+    // virt_dma_mem = map_segment(BUS_PHYS_ADDR(bus_dma_mem), DMA_MEM_SIZE))
+    // and
+    // lock_vc -> return h ? (void*)((size_t)0 + msg_mbox(fd, &msg)) : 0;
+
     debug("> start dma (%d %x %x %d %d %d) (%p %p)\n", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb, dma_regs.virt, dma_regs.bus);
 
     start_dma(&dma_regs, DMA_CHAN, cbp, 0);

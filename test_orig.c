@@ -266,7 +266,9 @@ void *lock_vc_mem(int fd, int h)
     // because msg_box returns a bus address which is 32 bits even on 64 bits
     // this below... gets rid of the warning... even though it's not pretty
 
-    return h ? (void*)((size_t)0 + msg_mbox(fd, &msg)) : 0;
+    void *r = h ? (void*)((size_t)0 + msg_mbox(fd, &msg)) : 0;
+    debug(" -> %p", r);
+    return r;
 }
 
 // Unlock allocated memory
