@@ -114,8 +114,8 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd);
 int str_rgb(char *s, int rgbs[][LED_NCHANS], int chan);
 void map_devices(void);
 //void init_smi(int width, int ns, int setup, int hold, int strobe);
-void setup_smi_dma(MEM_MAP *mp, int nsamp);
-void start_smi(MEM_MAP *mp);
+void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp);
+void start_smi(MEM_MAP *mp, int chan);
 
 int main(int argc, char *argv[])
 {
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
 
     init_smi(LED_NCHANS>8 ? SMI_16_BITS : SMI_8_BITS, SMI_TIMING);
     map_uncached_mem(&vc_mem, VC_MEM_SIZE);
-    
+
 #if TX_TEST
     oset = oset;
     setup_smi_dma(&vc_mem, sizeof(tx_test_data)/sizeof(TXDATA_T));
