@@ -86,35 +86,34 @@
 
 MEM_MAP vc_mem;
 
-// Ofset into Tx data buffer, given LED number in chan
+// offset into Tx data buffer, given LED number in chan
 #define LED_TX_OFFSET(n)    (LED_PREBITS + (LED_DLEN * (n)))
 
-// Size of data buffers & NV memory, given number of LEDs per chan
+// size of data buffers & NV memory, given number of LEDs per chan
 #define TX_BUFF_LEN(n)      (LED_TX_OFFSET(n) + LED_POSTBITS)
 #define TX_BUFF_SIZE(n)     (TX_BUFF_LEN(n) * sizeof(TXDATA_T))
 #define VC_MEM_SIZE         (PAGE_SIZE + TX_BUFF_SIZE(CHAN_MAXLEDS))
 
 // RGB values for test mode (1 value for each of 16 channels)
 int on_rgbs[16] = {
-    //0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
-    0x0000ff, 0x00ff00, 0x0000ff, 0xffffff,
+    0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
     0xff4040, 0x40ff40, 0x4040ff, 0x404040,
     0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
     0xff4040, 0x40ff40, 0x4040ff, 0x404040
 };
 int off_rgbs[16]; // zeroes
 
-#if TX_TEST
-// Data for simple transmission test
-TXDATA_T tx_test_data[] = {1, 2, 3, 4, 5, 6, 7, 0};
-#endif
+// #if TX_TEST
+// // Data for simple transmission test
+// TXDATA_T tx_test_data[] = {1, 2, 3, 4, 5, 6, 7, 0};
+// #endif
 
-TXDATA_T *txdata;                       // Pointer to uncached Tx data buffer
-TXDATA_T tx_buffer[TX_BUFF_LEN(CHAN_MAXLEDS)];  // Tx buffer for assembling data
+TXDATA_T *txdata;                              // pointer to uncached Tx data buffer
+TXDATA_T tx_buffer[TX_BUFF_LEN(CHAN_MAXLEDS)]; // tx buffer for assembling data
 
-int testmode, chan_ledcount=1;          // Command-line parameters
+int testmode, chan_ledcount = 1;        // command-line parameters
 int rgb_data[CHAN_MAXLEDS][LED_NCHANS]; // RGB data
-int chan_num;                           // Current channel for data I/P
+int chan_num;                           // current channel for data I/P
 
 #define fail(x) {printf(x); terminate(0);}
 
@@ -131,32 +130,36 @@ int main(int argc, char *argv[])
 {
     int args = 0, n, offset = 0;
 
-    while (argc > ++args)               // Process command-line args
+    while (argc > ++args) // if args are specified
     {
+        // process -X arguments
         if (argv[args][0] == '-')
         {
             switch (toupper(argv[args][1]))
             {
-            case 'N':                   // -N: number of LEDs per channel
-                if (args >= argc-1)
-                    fprintf(stderr, "Error: no numeric value\n");
-                else
-                    chan_ledcount = atoi(argv[++args]);
-                break;
-            case 'T':                   // -T: test mode
-                testmode = 1;
-                break;
-            default:                    // Otherwise error
-                printf("Unrecognised option '%c'\n", argv[args][1]);
-                printf("Options:\n"
-                       "  -n num    number of LEDs per channel\n"\
-                       "  -t        Test mode (flash LEDs)\n"\
-                      );
-                return(1);
+                case 'N': // -n XX is number of LEDs per channel
+                    if (args >= argc - 1)
+                        fprintf(stderr, "Error: no numeric value\n");
+                    else
+                        chan_ledcount = atoi(argv[++args]);
+                    break;
+                case 'T': // -t is test mode
+                    testmode = 1;
+                    break;
+                default: // -? is an error
+                    printf("Unrecognised option '%c'\n", argv[args][1]);
+                    printf("Options:\n"
+                        "  -n num    number of LEDs per channel\n"\
+                        "  -t        Test mode (flash LEDs)\n"\
+                        );
+                    return(1);
             }
         }
-        else if (chan_num<LED_NCHANS && hexdig(argv[args][0])>=0 &&
-                 (n=str_rgb(argv[args], rgb_data, chan_num))>0)
+        // process a color argument, one value per channel FIXME or ???
+        // no color = sets color to zero = led off
+        else if (chan_num < LED_NCHANS
+            && hexdig(argv[args][0]) >= 0 
+            && (n = str_rgb(argv[args], rgb_data, chan_num)) > 0)
         {
             chan_ledcount = n > chan_ledcount ? n : chan_ledcount;
             chan_num++;
@@ -201,16 +204,19 @@ int main(int argc, char *argv[])
         {
             if (chan_ledcount < 2)
             {
+                // FIXME this works
                 rgb_txdata(offset & 1 ? off_rgbs : on_rgbs, tx_buffer);
             }
             else
             {
+                // FIXME this = bus error, ?
                 for (n=0; n<chan_ledcount; n++)
                 {
                     rgb_txdata(n==offset % chan_ledcount ? on_rgbs : off_rgbs,
                                &tx_buffer[LED_TX_OFFSET(n)]);
                 }
             }
+            printf("!\n");
             offset++;
 #if LED_NCHANS <= 8
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
@@ -223,6 +229,7 @@ int main(int argc, char *argv[])
     }
     else
     {
+        // FIXME this works for 1 LED, what should happen with 2 arg values?
         for (n = 0; n < chan_ledcount; n++)
             rgb_txdata(rgb_data[n], &tx_buffer[LED_TX_OFFSET(n)]);
 #if LED_NCHANS <= 8
