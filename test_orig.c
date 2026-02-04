@@ -158,6 +158,7 @@ int dma_test_mem_transfer(void)
     cbp->srce_ad = BUS_DMA_MEM(srce);
     cbp->dest_ad = BUS_DMA_MEM(dest);
     cbp->tfr_len = strlen(srce) + 1;
+    debug("> start dma (%d %x %x %d %d %d) (%x %x)\n", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb, virt_dma_mem, bus_dma_mem);
     start_dma(cbp);
     usleep(10);
 
@@ -393,8 +394,6 @@ void enable_dma(void)
 // Start DMA, given first control block
 void start_dma(DMA_CB *cbp)
 {
-    debug("DMA %d %x %x %d %d %d", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb);
-
     debug("start dma\n");
     *VIRT_DMA_REG(DMA_CONBLK_AD) = BUS_DMA_MEM(cbp);
     *VIRT_DMA_REG(DMA_CS) = 2;       // Clear 'end' flag

@@ -74,6 +74,18 @@ int dma_test_mem_transfer(void)
     cbp->srce_ad = MEM_BUS_ADDR(&dma_regs, srce);
     cbp->dest_ad = MEM_BUS_ADDR(&dma_regs, dest);
     cbp->tfr_len = strlen(srce) + 1;
+
+    // FIXME srce and dest addr
+    //
+    // are deba5020 deba5120 when working = BUS_DMA_MEM
+    // are 7e006020 7e006120 when failing = MEM_BUS_ADDR
+    //
+    // #define BUS_DMA_MEM(a)  ((size_t)a-(size_t)virt_dma_mem+(size_t)bus_dma_mem)
+    // #define MEM_BUS_ADDR(mp, a) ((size_t)a - (size_t)(mp)->virt + (size_t)(mp)->bus)
+    //
+    // 
+    debug("> start dma (%d %x %x %d %d %d) (%x %x)\n", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb, dma_regs.virt, dma_regs.bus);
+
     start_dma(&dma_regs, DMA_CHAN, cbp, 0);
     usleep(10);
 
