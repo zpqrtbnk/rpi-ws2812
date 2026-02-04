@@ -7,6 +7,8 @@ and then running leds.c turned the first one OFF?
 but I cannot repro?
 
 ah running bin/leds -t = test mode DOES flash the first led!
+-N <something> gives a bus error
+...
 
 RP3A0
 
@@ -21,6 +23,8 @@ from https://pinout.xyz/pinout/pin21_gpio9/
 we want to use GPIO 9 aka SMI SD1
 ..... ..... ..... .....
 ..... ..... X.... .....
+
+no, actually GPIO 8 aka SMI SD0
 
 QUESTIONS
 

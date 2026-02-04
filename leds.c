@@ -49,14 +49,26 @@
 #include "rpi/rpi_vm.h"
 #include "rpi/rpi_dma.h"
 
-// FIXME adjust to ACTUAL pi model!
-#if PHYS_REG_BASE==PI_4_REG_BASE        // Timings for RPi v4 (1.5 GHz)
-#define SMI_TIMING       10, 15, 30, 15    // 400 ns cycle time
-#else                                   // Timings for RPi v0-3 (1 GHz)
-#define SMI_TIMING       10, 10, 20, 10   // 400 ns cycle time
+// 
+
+// get a 400ns cycle time
+#if WHAT_PI == PI_Z2
+// assume 1.5 GHz (what fq is that?)
+#define SMI_TIMING 10, 15, 30, 15
+#else
+// assume 1 GHz
+//#define SMI_TIMING 10, 10, 20, 10
+#error meh
 #endif
 
-#define TX_TEST         1   // If non-zero, use dummy Tx data
+// FIXME adjust to ACTUAL pi model!
+// #if PHYS_REG_BASE==PI_4_REG_BASE        // Timings for RPi v4 (1.5 GHz)
+// #define SMI_TIMING       10, 15, 30, 15    // 400 ns cycle time
+// #else                                   // Timings for RPi v0-3 (1 GHz)
+// #define SMI_TIMING       10, 10, 20, 10   // 400 ns cycle time
+// #endif
+
+#define TX_TEST         0   // If non-zero, use dummy Tx data
 #define LED_D0_PIN      8   // GPIO pin for D0 output
 #define LED_NCHANS      8   // Number of LED channels (8 or 16)
 #define LED_NBITS       24  // Number of data bits per LED
