@@ -2,6 +2,17 @@
 
 extern MEM_MAP smi_regs;
 
+extern volatile SMI_CS_REG  *smi_cs;
+extern volatile SMI_L_REG   *smi_l;
+extern volatile SMI_A_REG   *smi_a;
+extern volatile SMI_D_REG   *smi_d;
+extern volatile SMI_DMC_REG *smi_dmc;
+extern volatile SMI_DSR_REG *smi_dsr;
+extern volatile SMI_DSW_REG *smi_dsw;
+extern volatile SMI_DCS_REG *smi_dcs;
+extern volatile SMI_DCA_REG *smi_dca;
+extern volatile SMI_DCD_REG *smi_dcd;
+
 // Register definitions
 #define SMI_BASE    (PHYS_REG_BASE + 0x600000)
 #define SMI_CS      0x00    // Control & status
