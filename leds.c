@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
     while (dma_active(DMA_CHAN))
         usleep(10);
 #else
-    setup_smi_dma(&vc_mem, TX_BUFF_LEN(chan_ledcount));
+    setup_smi_dma(&vc_mem, DMA_CHAN, TX_BUFF_LEN(chan_ledcount));
     printf("%s %u LED%s per channel, %u channels\n", testmode ? "Testing" : "Setting",
            chan_ledcount, chan_ledcount==1 ? "" : "s", LED_NCHANS);
     if (testmode)
