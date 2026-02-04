@@ -393,6 +393,8 @@ void enable_dma(void)
 // Start DMA, given first control block
 void start_dma(DMA_CB *cbp)
 {
+    debug("DMA %d %d %d %d %d %d", cbp->ti, cbp->srce_ad, cbp->dest_ad, cbp->tfr_len, cbp->stride, cbp->next_cb);
+
     debug("start dma\n");
     *VIRT_DMA_REG(DMA_CONBLK_AD) = BUS_DMA_MEM(cbp);
     *VIRT_DMA_REG(DMA_CS) = 2;       // Clear 'end' flag
