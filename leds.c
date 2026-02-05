@@ -152,8 +152,8 @@ int main(int argc, char *argv[])
                         fprintf(stderr, "Error: no color\n");
                     else
                     {
-                        char p;
-                        rgb_data[0] = strtoul(argv[++args], &p, 16);
+                        char *p;
+                        on_rgbs[0] = strtoul(argv[++args], &p, 16);
                     }
                     break;
                 default: // -? is an error
