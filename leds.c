@@ -242,6 +242,13 @@ int main(int argc, char *argv[])
                 // why not start at zero? why the first offset?
                 // alignment issues?
 
+                // "Look at the disassembly of your program. You will find that the
+                // memset has been replaced with an instruction that sets an entire
+                // cache line, which is an invalid operation on Device-mapped memory.
+                // strcpy is probably using unaligned accesses - also invalid."
+                //
+                // could trigger when size>128B and then we may want to batch copies?
+
                 for (n = 0; n < chan_ledcount; n++)
                 {
                     rgb_txdata(
@@ -273,7 +280,10 @@ int main(int argc, char *argv[])
 #if LED_NCHANS <= 8
         swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
-        memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+        // see above
+        //memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+        for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
+                txdata[i] = tx_buffer[i];
         start_smi(&vc_mem, DMA_CHAN);
         usleep(10);
         while (dma_active(DMA_CHAN)) usleep(10);
