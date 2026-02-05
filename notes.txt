@@ -53,3 +53,15 @@ peripheral base address is 3f000000
 The GPIO registers themselves are located at an offset from the peripheral base. For many models, the GPIO registers begin at an offset of 0x200000 from the peripheral base address.
 
 BUT ... the code we're using was 32b and we MUST bump it to 64 bits!
+
+RANDOM
+
+total pulse is 1.25us
+reset is 50us... to 300us depending on LED revision
+
+0 is .4us + .85us
+1 is .8us + .45us
+
+though some tolerance seems to be OK (.35us for 0, .7us for 1..., 1.2us total...)
+
+sequence = 24 bits GRB color, MSB first

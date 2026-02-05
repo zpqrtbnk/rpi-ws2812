@@ -111,7 +111,7 @@ int off_rgbs[16]; // zeroes
 TXDATA_T *txdata;                              // pointer to uncached Tx data buffer
 TXDATA_T tx_buffer[TX_BUFF_LEN(CHAN_MAXLEDS)]; // tx buffer for assembling data
 
-int testmode, chan_ledcount = 1;        // command-line parameters
+int testmode, setmode, chan_ledcount = 1;        // command-line parameters
 int rgb_data[CHAN_MAXLEDS][LED_NCHANS]; // RGB data
 int chan_num;                           // current channel for data I/P
 
@@ -145,6 +145,16 @@ int main(int argc, char *argv[])
                     break;
                 case 'T': // -t is test mode
                     testmode = 1;
+                    break;
+                case 'C': // -c <color> sets number of leds to color
+                    setmode = 1;
+                    if (args >= argc - 1)
+                        fprintf(stderr, "Error: no color\n");
+                    else
+                    {
+                        char p;
+                        rgb_data[0] = strtoul(argv[++args], &p, 16);
+                    }
                     break;
                 default: // -? is an error
                     printf("Unrecognised option '%c'\n", argv[args][1]);
@@ -198,13 +208,37 @@ int main(int argc, char *argv[])
         LED_NCHANS
     );
 
+    if (setmode)
+    {
+        for (n = 0; n < chan_ledcount; n++)
+        {
+            rgb_txdata(
+                on_rgbs,
+                &tx_buffer[LED_TX_OFFSET(n)]
+            );
+        }
+
+#if LED_NCHANS <= 8
+        swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+#endif
+        // memcpy(dest, srce, size)
+        //memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+        for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
+            txdata[i] = tx_buffer[i];
+
+        start_smi(&vc_mem, DMA_CHAN);
+        usleep(10);
+        // not waiting for DMA active?
+        terminate(0);
+        return 0;
+    }
+
     if (testmode)
     {
         while (1)
         {
             if (chan_ledcount < 2)
             {
-                // FIXME this works
                 rgb_txdata(
                     offset & 1 ? off_rgbs : on_rgbs,
                     tx_buffer
@@ -212,35 +246,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                // FIXME this = bus error in the loop
-                // two LEDs = ledcount is 2, n is 0,1
-                // offset = 0 -> on_rgbs to 
-                //  &tx_buffer[LED_TX_OFFSET(0)]
-                //  &tx_buffer[LED_TX_OFFSET(1)]
-                // then
-                // for more offsets only thing that changes is on/off rgbs
-                // err comes from
-                // &tx_buffer[LED_TX_OFFSET(0)]
-                // w/ LED_TX_OFFSET defined as (LED_PREBITS + (LED_DLEN * (n)))
-                //
-                // and tx_buffer[TX_BUFF_LEN(CHAN_MAXLEDS)]
-                // with... 
-                // TX_BUFF_LEN(n)      (LED_TX_OFFSET(n) + LED_POSTBITS)
-                // pre is 4, post is 4, max is 50
-                //
-                // LED_DLEN        (LED_NBITS * BIT_NPULSES)
-                //  is 24*3
-                // ie we send 24 bits per LED and each bit is 3 pulses
-                //
-                // and we want to write to tx_buffer the pulses
-                // rgb_txdata is going to advance 3*24 into the buffer
-                //
-                // n = 0 -> pre
-                // n = 1 -> pre + 3*24
-                // etc
-                // len=3608 n=0->4 n=1->76
-                // why not start at zero? why the first offset?
-                // alignment issues?
+                // memcpy, memset... alignment issues?
 
                 // "Look at the disassembly of your program. You will find that the
                 // memset has been replaced with an instruction that sets an entire
@@ -261,7 +267,6 @@ int main(int argc, char *argv[])
 #if LED_NCHANS <= 8
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
-            // FIXME ???
             // memcpy(dest, srce, size)
             //memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
             for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
