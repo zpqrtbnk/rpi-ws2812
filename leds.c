@@ -242,10 +242,8 @@ int main(int argc, char *argv[])
                 // why not start at zero? why the first offset?
                 // alignment issues?
 
-                debug(">> len %d\n", TX_BUFF_LEN(CHAN_MAXLEDS));
                 for (n = 0; n < chan_ledcount; n++)
                 {
-                    debug(">> n=%d at %d\n", n, LED_TX_OFFSET(n));
                     rgb_txdata(
                         n == offset % chan_ledcount ? on_rgbs : off_rgbs,
                         &tx_buffer[LED_TX_OFFSET(n)]
@@ -256,12 +254,12 @@ int main(int argc, char *argv[])
 #if LED_NCHANS <= 8
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
-            debug("/\n"); // FIXME and THEN memcpy bus-errors
+            // FIXME ???
             // memcpy(dest, srce, size)
             //memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
             for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
                 txdata[i] = tx_buffer[i];
-            debug("/\n");
+
             start_smi(&vc_mem, DMA_CHAN);
             usleep(CHASE_MSEC * 1000);
             // not waiting for DMA active?
