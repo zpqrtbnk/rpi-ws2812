@@ -319,6 +319,7 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
         debug(">>> %d %p\n", n, &txd[1]);
         debug(">>> %d %p\n", n, &txd[2]);
         txd[1] = txd[2] = 0;
+        debug("-\n");
 
         // for each channel, set 2nd byte or word depending on rgb value
         for (i = 0; i < LED_NCHANS; i++)
