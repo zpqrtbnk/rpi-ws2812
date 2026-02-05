@@ -326,6 +326,7 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
         {
             if (rgbs[i] & msk) txd[1] |= (1 << i);
         }
+        debug("-\n");
 
         // advance number of byte or word per bit
         // (since we do txd[0-2] on each bit, do += 3) 
