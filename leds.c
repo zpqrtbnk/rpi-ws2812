@@ -260,7 +260,9 @@ int main(int argc, char *argv[])
 #endif
             debug("/\n");
             memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+            debug("/\n");
             start_smi(&vc_mem, DMA_CHAN);
+            debug("/\n");
             usleep(CHASE_MSEC * 1000);
             // not waiting for DMA active?
         }
