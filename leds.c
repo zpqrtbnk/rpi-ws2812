@@ -238,6 +238,9 @@ int main(int argc, char *argv[])
                 // n = 0 -> pre
                 // n = 1 -> pre + 3*24
                 // etc
+                // len=3608 n=0->4 n=1->76
+                // why not start at zero? why the first offset?
+                // alignment issues?
 
                 debug(">> len %d\n", TX_BUFF_LEN(CHAN_MAXLEDS));
                 for (n = 0; n < chan_ledcount; n++)
@@ -311,7 +314,10 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
         // 1st byte or word is a high pulse on all channels
         // 2nd has high (1) or low (0) bits from data
         // 3rd is a low pulse
+        debug(">>> %p\n", &txd[0]);
         txd[0] = (TXDATA_T) 0xffff;
+        debug(">>> %p\n", &txd[1]);
+        debug(">>> %p\n", &txd[2]);
         txd[1] = txd[2] = 0;
 
         // for each channel, set 2nd byte or word depending on rgb value
