@@ -251,11 +251,14 @@ int main(int argc, char *argv[])
                         &tx_buffer[LED_TX_OFFSET(n)]
                     );
                 }
+                debug("/\n");
             }
+            debug("/\n");
             offset++;
 #if LED_NCHANS <= 8
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
+            debug("/\n");
             memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
             start_smi(&vc_mem, DMA_CHAN);
             usleep(CHASE_MSEC * 1000);
