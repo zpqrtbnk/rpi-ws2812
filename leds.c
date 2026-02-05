@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
                 // n = 1 -> pre + 3*24
                 // etc
 
-                debug(">> len &d\n", TX_BUFF_LEN(CHAN_MAXLEDS));
+                debug(">> len %d\n", TX_BUFF_LEN(CHAN_MAXLEDS));
                 for (n = 0; n < chan_ledcount; n++)
                 {
                     debug(">> n=%d at %d\n", n, LED_TX_OFFSET(n));
