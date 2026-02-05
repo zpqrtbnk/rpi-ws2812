@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
 
         start_smi(&vc_mem, DMA_CHAN);
         usleep(10);
-        // not waiting for DMA active?
+        while (dma_active(DMA_CHAN)) usleep(10); // don't leave before done!
         terminate(0);
         return 0;
     }
