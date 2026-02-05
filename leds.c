@@ -205,18 +205,50 @@ int main(int argc, char *argv[])
             if (chan_ledcount < 2)
             {
                 // FIXME this works
-                rgb_txdata(offset & 1 ? off_rgbs : on_rgbs, tx_buffer);
+                rgb_txdata(
+                    offset & 1 ? off_rgbs : on_rgbs,
+                    tx_buffer
+                );
             }
             else
             {
-                // FIXME this = bus error, ?
-                for (n=0; n<chan_ledcount; n++)
+                // FIXME this = bus error in the loop
+                // two LEDs = ledcount is 2, n is 0,1
+                // offset = 0 -> on_rgbs to 
+                //  &tx_buffer[LED_TX_OFFSET(0)]
+                //  &tx_buffer[LED_TX_OFFSET(1)]
+                // then
+                // for more offsets only thing that changes is on/off rgbs
+                // err comes from
+                // &tx_buffer[LED_TX_OFFSET(0)]
+                // w/ LED_TX_OFFSET defined as (LED_PREBITS + (LED_DLEN * (n)))
+                //
+                // and tx_buffer[TX_BUFF_LEN(CHAN_MAXLEDS)]
+                // with... 
+                // TX_BUFF_LEN(n)      (LED_TX_OFFSET(n) + LED_POSTBITS)
+                // pre is 4, post is 4, max is 50
+                //
+                // LED_DLEN        (LED_NBITS * BIT_NPULSES)
+                //  is 24*3
+                // ie we send 24 bits per LED and each bit is 3 pulses
+                //
+                // and we want to write to tx_buffer the pulses
+                // rgb_txdata is going to advance 3*24 into the buffer
+                //
+                // n = 0 -> pre
+                // n = 1 -> pre + 3*24
+                // etc
+
+                debug(">> len &d\n", TX_BUFF_LEN(CHAN_MAXLEDS));
+                for (n = 0; n < chan_ledcount; n++)
                 {
-                    rgb_txdata(n==offset % chan_ledcount ? on_rgbs : off_rgbs,
-                               &tx_buffer[LED_TX_OFFSET(n)]);
+                    debug(">> n=%d at %d\n", n, LED_TX_OFFSET(n));
+                    rgb_txdata(
+                        n == offset % chan_ledcount ? on_rgbs : off_rgbs,
+                        &tx_buffer[LED_TX_OFFSET(n)]
+                    );
                 }
             }
-            printf("!\n");
             offset++;
 #if LED_NCHANS <= 8
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
