@@ -251,18 +251,18 @@ int main(int argc, char *argv[])
                         &tx_buffer[LED_TX_OFFSET(n)]
                     );
                 }
-                debug("/\n");
             }
-            debug("/\n");
             offset++;
 #if LED_NCHANS <= 8
             swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
-            debug("/\n");
-            memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+            debug("/\n"); // FIXME and THEN memcpy bus-errors
+            // memcpy(dest, srce, size)
+            //memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+            for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
+                txdata[i] = tx_buffer[i];
             debug("/\n");
             start_smi(&vc_mem, DMA_CHAN);
-            debug("/\n");
             usleep(CHASE_MSEC * 1000);
             // not waiting for DMA active?
         }
@@ -319,19 +319,14 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
         // 1st byte or word is a high pulse on all channels
         // 2nd has high (1) or low (0) bits from data
         // 3rd is a low pulse
-        debug(">>> %d %p\n", n, &txd[0]);
         txd[0] = (TXDATA_T) 0xffff;
-        debug(">>> %d %p\n", n, &txd[1]);
-        debug(">>> %d %p\n", n, &txd[2]);
         txd[1] = txd[2] = 0;
-        debug("-\n");
 
         // for each channel, set 2nd byte or word depending on rgb value
         for (i = 0; i < LED_NCHANS; i++)
         {
             if (rgbs[i] & msk) txd[1] |= (1 << i);
         }
-        debug("-\n");
 
         // advance number of byte or word per bit
         // (since we do txd[0-2] on each bit, do += 3) 
