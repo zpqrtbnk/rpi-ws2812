@@ -314,10 +314,10 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
         // 1st byte or word is a high pulse on all channels
         // 2nd has high (1) or low (0) bits from data
         // 3rd is a low pulse
-        debug(">>> %p\n", &txd[0]);
+        debug(">>> %d %p\n", n, &txd[0]);
         txd[0] = (TXDATA_T) 0xffff;
-        debug(">>> %p\n", &txd[1]);
-        debug(">>> %p\n", &txd[2]);
+        debug(">>> %d %p\n", n, &txd[1]);
+        debug(">>> %d %p\n", n, &txd[2]);
         txd[1] = txd[2] = 0;
 
         // for each channel, set 2nd byte or word depending on rgb value
