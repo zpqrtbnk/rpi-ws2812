@@ -129,11 +129,14 @@ void map_devices(void);
 void init_smi(int width, int ns, int setup, int hold, int strobe);
 void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp);
 void start_smi(MEM_MAP *mp, int chan);
+void set();
 
 int main(int argc, char *argv[])
 {
     int argi = 1;
     int n, offset = 0;
+
+    for (int i = 0; i < 16; i++) rgbs[i] = 0;
 
     // argc is number of args (including program name)
     // argv is args values, first one is program name
@@ -154,6 +157,14 @@ int main(int argc, char *argv[])
             {
                 case 'T': // -t is test mode
                     testmode = 1;
+                    if (argc - argi == 1)
+                    {
+                        testmode = strtoul(argv[argi++], NULL, 10);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "ERR: invalid args.\n");
+                    }
                     break;
                 case 'C': // -c sets leds colors
                     setmode = 1;
@@ -161,36 +172,36 @@ int main(int argc, char *argv[])
                     {
                         // one arg = set ALL to specified color
                         unsigned long color = strtoul(argv[argi++], NULL, 16);
-                        for (int i = 0; i < 6; i++) on_rgbs[i] = color;
+                        for (int i = 0; i < 6; i++) rgbs[i] = color;
                     }
                     else if (argc - argi == 2)
                     {
                         // two args = set TOP and BOTTOM to specified colors
                         unsigned long color_top = strtoul(argv[argi++], NULL, 16);
                         unsigned long color_bot = strtoul(argv[argi++], NULL, 16);
-                        for (int i = 0; i < 3; i++) on_rgbs[i] = color_top;
-                        for (int i = 3; i < 6; i++) on_rgbs[i] = color_bot;
+                        for (int i = 0; i < 3; i++) rgbs[i] = color_top;
+                        for (int i = 3; i < 6; i++) rgbs[i] = color_bot;
                     }
                     else if (argc - argi == 3)
                     {
                         // three args = set CENTER, FILL and BORDER to specified colors
-                        on_rgbs[0] = on_rgbs[3] = strtoul(argv[argi++], NULL, 16);
-                        on_rgbs[1] = on_rgbs[4] = strtoul(argv[argi++], NULL, 16);
-                        on_rgbs[2] = on_rgbs[5] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[0] = rgbs[3] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[1] = rgbs[4] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[2] = rgbs[5] = strtoul(argv[argi++], NULL, 16);
                     }
                     else if (argc - argi == 6)
                     {
                         // six args = set TOP and BOTTOM CENTER, FILL and BORDER to specified colors
-                        on_rgbs[0] = strtoul(argv[argi++], NULL, 16);
-                        on_rgbs[1] = strtoul(argv[argi++], NULL, 16);
-                        on_rgbs[2] = strtoul(argv[argi++], NULL, 16);
-                        on_rgbs[3] = strtoul(argv[argi++], NULL, 16);
-                        on_rgbs[4] = strtoul(argv[argi++], NULL, 16);
-                        on_rgbs[5] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[0] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[1] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[2] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[3] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[4] = strtoul(argv[argi++], NULL, 16);
+                        rgbs[5] = strtoul(argv[argi++], NULL, 16);
                     }
                     else
                     {
-                        fprintf(stderr, "ERR: invalid color.\n");
+                        fprintf(stderr, "ERR: invalid args.\n");
                     }
                     break;
                 default: // -? is an error
@@ -229,24 +240,7 @@ int main(int argc, char *argv[])
     if (setmode)
     {
         printf("INFO: set colors\n");
-
-        // prepare data
-        for (n = 0; n < chan_ledcount; n++)
-            rgb_txdata(on_rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
-
-#if LED_NCHANS <= 8
-        swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
-#endif
-
-        // copy buffer - memcpy has alignment issues, use loop instead
-        for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
-            txdata[i] = tx_buffer[i];
-
-        // send data once
-        start_smi(&vc_mem, DMA_CHAN);
-        usleep(10);
-        while (dma_active(DMA_CHAN)) usleep(10); // wait until done
-
+        set();
         printf("INFO: done\n");
         terminate(0);
         return 0;
@@ -254,6 +248,49 @@ int main(int argc, char *argv[])
 
     if (testmode)
     {
+        printf("INFO: test mode %d\n", testmode);
+
+        if (testmode == 1)
+        {
+            while (1)
+            {
+                for (int i = 0; i < 3; i++) rgbs[i] = 0x200000; // red
+                for (int i = 3; i < 6; i++) rgbs[i] = 0x000000; // black
+                set();
+                usleep(1 * 1000 * 1000);
+                for (int i = 0; i < 3; i++) rgbs[i] = 0x000000; // black
+                for (int i = 3; i < 6; i++) rgbs[i] = 0x200000; // red
+                set();
+                usleep(1 * 1000 * 1000);
+            }
+        }
+        else if (testmode == 2)
+        {
+            // center has 1 led
+            // fill has 56 leds
+            // border has 24 leds
+
+            for (int i = 0; i < 3; i++) rgbs[i] = 0x200000; // red
+            for (int i = 3; i < 6; i++) rgbs[i] = 0x000000; // black
+
+            while (1)
+            {
+                int c = CHAN_LEDCOUNT;
+                while (c > 0)
+                {
+                    rgbs[3] = 0x200000; // red
+                    for (int n = 0; n < c; n++)
+                        rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
+                    rgbs[3] = 0x000000; // black
+                    for (int n = c; n < chan_ledcount; n++)
+                        rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
+                    set();
+                    usleep(1 * 1000 * 1000);
+                }
+            }
+        }
+
+        /*
         while (1)
         {
             if (chan_ledcount < 2)
@@ -311,10 +348,40 @@ int main(int argc, char *argv[])
         start_smi(&vc_mem, DMA_CHAN);
         usleep(10);
         while (dma_active(DMA_CHAN)) usleep(10);
-    }
+        }*/
 //#endif
+
+    }
+
+    printf("INFO: done\n");
     terminate(0);
     return(0);
+}
+
+void set0();
+void set()
+{
+    // prepare data
+    for (int n = 0; n < chan_ledcount; n++)
+        rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
+    set0();
+}
+
+void set0()
+{
+
+#if LED_NCHANS <= 8
+    swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+#endif
+
+    // copy buffer - memcpy has alignment issues, use loop instead
+    for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
+        txdata[i] = tx_buffer[i];
+
+    // send data once
+    start_smi(&vc_mem, DMA_CHAN);
+    usleep(10);
+    while (dma_active(DMA_CHAN)) usleep(10); // wait until done
 }
 
 // Convert RGB text string into integer data, for given channel
