@@ -134,7 +134,6 @@ void set();
 int main(int argc, char *argv[])
 {
     int argi = 1;
-    int n, offset = 0;
 
     for (int i = 0; i < 16; i++) rgbs[i] = 0;
 
@@ -275,7 +274,7 @@ int main(int argc, char *argv[])
 
             while (1)
             {
-                int c = CHAN_LEDCOUNT;
+                int c = 24;
                 while (c > 0)
                 {
                     rgbs[3] = 0x200000; // red
