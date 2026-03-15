@@ -253,12 +253,12 @@ int main(int argc, char *argv[])
         {
             while (1)
             {
-                for (int i = 0; i < 3; i++) rgbs[i] = 0x200000; // red
+                for (int i = 0; i < 3; i++) rgbs[i] = 0x402000; // orange
                 for (int i = 3; i < 6; i++) rgbs[i] = 0x000000; // black
                 set();
                 usleep(1 * 1000 * 1000);
                 for (int i = 0; i < 3; i++) rgbs[i] = 0x000000; // black
-                for (int i = 3; i < 6; i++) rgbs[i] = 0x200000; // red
+                for (int i = 3; i < 6; i++) rgbs[i] = 0x402000; // orange
                 set();
                 usleep(1 * 1000 * 1000);
             }
@@ -269,11 +269,11 @@ int main(int argc, char *argv[])
             // fill has 56 leds
             // border has 24 leds
 
-            for (int i = 0; i < 3; i++) rgbs[i] = 0x200000; // red
-            for (int i = 3; i < 6; i++) rgbs[i] = 0x000000; // black
-
             while (1)
             {
+                for (int i = 0; i < 3; i++) rgbs[i] = 0x200000; // red
+                for (int i = 3; i < 6; i++) rgbs[i] = 0x000000; // black
+
                 int c = 24;
                 while (c > 0)
                 {
@@ -285,6 +285,24 @@ int main(int argc, char *argv[])
                         rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
                     set();
                     usleep(1 * 1000 * 1000);
+                    c--;
+                }
+
+                for (int i = 0; i < 3; i++) rgbs[i] = 0x000000; // black
+                for (int i = 3; i < 6; i++) rgbs[i] = 0x002000; // green
+
+                c = 24;
+                while (c > 0)
+                {
+                    rgbs[6] = 0x002000; // green
+                    for (int n = 0; n < c; n++)
+                        rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
+                    rgbs[6] = 0x000000; // black
+                    for (int n = c; n < chan_ledcount; n++)
+                        rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
+                    set();
+                    usleep(1 * 1000 * 1000);
+                    c--;
                 }
             }
         }
