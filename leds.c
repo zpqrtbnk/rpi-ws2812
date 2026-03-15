@@ -130,6 +130,7 @@ void init_smi(int width, int ns, int setup, int hold, int strobe);
 void setup_smi_dma(MEM_MAP *mp, int chan, int nsamp);
 void start_smi(MEM_MAP *mp, int chan);
 void set();
+void set0();
 
 int main(int argc, char *argv[])
 {
@@ -253,12 +254,12 @@ int main(int argc, char *argv[])
         {
             while (1)
             {
-                for (int i = 0; i < 3; i++) rgbs[i] = 0x402000; // orange
+                for (int i = 0; i < 3; i++) rgbs[i] = 0x100400; // orange
                 for (int i = 3; i < 6; i++) rgbs[i] = 0x000000; // black
                 set();
                 usleep(1 * 1000 * 1000);
                 for (int i = 0; i < 3; i++) rgbs[i] = 0x000000; // black
-                for (int i = 3; i < 6; i++) rgbs[i] = 0x402000; // orange
+                for (int i = 3; i < 6; i++) rgbs[i] = 0x100400; // orange
                 set();
                 usleep(1 * 1000 * 1000);
             }
@@ -283,7 +284,7 @@ int main(int argc, char *argv[])
                     rgbs[3] = 0x000000; // black
                     for (int n = c; n < chan_ledcount; n++)
                         rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
-                    set();
+                    set0();
                     usleep(1 * 1000 * 1000);
                     c--;
                 }
@@ -300,7 +301,7 @@ int main(int argc, char *argv[])
                     rgbs[6] = 0x000000; // black
                     for (int n = c; n < chan_ledcount; n++)
                         rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
-                    set();
+                    set0();
                     usleep(1 * 1000 * 1000);
                     c--;
                 }
@@ -375,7 +376,6 @@ int main(int argc, char *argv[])
     return(0);
 }
 
-void set0();
 void set()
 {
     // prepare data
