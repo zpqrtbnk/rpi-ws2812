@@ -49,7 +49,7 @@
 #include "rpi/rpi_vm.h"
 #include "rpi/rpi_dma.h"
 
-// 
+//
 
 // get a 400ns cycle time
 #if WHAT_PI == PI_Z2
@@ -63,13 +63,18 @@
 
 #define TX_TEST         0   // If non-zero, use dummy Tx data
 #define LED_D0_PIN      8   // GPIO pin for D0 output
+#define CHASE_MSEC      100 // Delay time for chaser light test
+
 #define LED_NCHANS      8   // Number of LED channels (8 or 16)
+
 #define LED_NBITS       24  // Number of data bits per LED
 #define LED_PREBITS     4   // Number of zero bits before LED data
 #define LED_POSTBITS    4   // Number of zero bits after LED data
 #define BIT_NPULSES     3   // Number of O/P pulses per LED bit
-#define CHAN_MAXLEDS    50  // Maximum number of LEDs per channel
-#define CHASE_MSEC      100 // Delay time for chaser light test
+
+#define CHAN_MAXLEDS    56  // Maximum number of LEDs per channel
+#define CHAN_LEDCOUNT   56  // Default number of LEDs per channel
+
 #define REQUEST_THRESH  2   // DMA request threshold
 #define DMA_CHAN        10  // DMA channel to use
 
@@ -94,6 +99,9 @@ MEM_MAP vc_mem;
 #define TX_BUFF_SIZE(n)     (TX_BUFF_LEN(n) * sizeof(TXDATA_T))
 #define VC_MEM_SIZE         (PAGE_SIZE + TX_BUFF_SIZE(CHAN_MAXLEDS))
 
+// RGB values (1 value for each of 16 channels)
+int rgbs[16];
+
 // RGB values for test mode (1 value for each of 16 channels)
 int on_rgbs[16] = {
     0xff0000, 0x00ff00, 0x0000ff, 0xffffff,
@@ -103,16 +111,12 @@ int on_rgbs[16] = {
 };
 int off_rgbs[16]; // zeroes
 
-// #if TX_TEST
-// // Data for simple transmission test
-// TXDATA_T tx_test_data[] = {1, 2, 3, 4, 5, 6, 7, 0};
-// #endif
-
-TXDATA_T *txdata;                              // pointer to uncached Tx data buffer
+TXDATA_T *txdata;                              // pointer to uncached tx data buffer
 TXDATA_T tx_buffer[TX_BUFF_LEN(CHAN_MAXLEDS)]; // tx buffer for assembling data
 
-int testmode, setmode, chan_ledcount = 1;        // command-line parameters
-int rgb_data[CHAN_MAXLEDS][LED_NCHANS]; // RGB data
+int testmode, setmode;
+int chan_ledcount = CHAN_LEDCOUNT;
+int rgb_data[CHAN_MAXLEDS][LED_NCHANS];
 int chan_num;                           // current channel for data I/P
 
 #define fail(x) {printf(x); terminate(0);}
@@ -128,51 +132,80 @@ void start_smi(MEM_MAP *mp, int chan);
 
 int main(int argc, char *argv[])
 {
-    int args = 0, n, offset = 0;
+    int argi = 1;
+    int n, offset = 0;
 
-    while (argc > ++args) // if args are specified
+    // argc is number of args (including program name)
+    // argv is args values, first one is program name
+    // argi is arg index, starts at one (skip program name)
+    //
+    // -> argc-argi = number of remaining args
+    //   0: no more args
+    //   1: can take 1 arg
+    //   etc
+
+    while (argc - argi > 0) // while there are more args...
     {
         // process -X arguments
-        if (argv[args][0] == '-')
+        if (argv[argi][0] == '-')
         {
-            switch (toupper(argv[args][1]))
+            char l = toupper(argv[argi++][1]);
+            switch (l)
             {
-                case 'N': // -n XX is number of LEDs per channel
-                    if (args >= argc - 1)
-                        fprintf(stderr, "Error: no numeric value\n");
-                    else
-                        chan_ledcount = atoi(argv[++args]);
-                    break;
                 case 'T': // -t is test mode
                     testmode = 1;
                     break;
-                case 'C': // -c <color> sets number of leds to color
+                case 'C': // -c sets leds colors
                     setmode = 1;
-                    if (args >= argc - 1)
-                        fprintf(stderr, "Error: no color\n");
+                    if (argc - argi == 1)
+                    {
+                        // one arg = set ALL to specified color
+                        unsigned long color = strtoul(argv[argi++], NULL, 16);
+                        for (int i = 0; i < 6; i++) on_rgbs[i] = color;
+                    }
+                    else if (argc - argi == 2)
+                    {
+                        // two args = set TOP and BOTTOM to specified colors
+                        unsigned long color_top = strtoul(argv[argi++], NULL, 16);
+                        unsigned long color_bot = strtoul(argv[argi++], NULL, 16);
+                        for (int i = 0; i < 3; i++) on_rgbs[i] = color_top;
+                        for (int i = 3; i < 6; i++) on_rgbs[i] = color_bot;
+                    }
+                    else if (argc - argi == 3)
+                    {
+                        // three args = set CENTER, FILL and BORDER to specified colors
+                        on_rgbs[0] = on_rgbs[3] = strtoul(argv[argi++], NULL, 16);
+                        on_rgbs[1] = on_rgbs[4] = strtoul(argv[argi++], NULL, 16);
+                        on_rgbs[2] = on_rgbs[5] = strtoul(argv[argi++], NULL, 16);
+                    }
+                    else if (argc - argi == 6)
+                    {
+                        // six args = set TOP and BOTTOM CENTER, FILL and BORDER to specified colors
+                        on_rgbs[0] = strtoul(argv[argi++], NULL, 16);
+                        on_rgbs[1] = strtoul(argv[argi++], NULL, 16);
+                        on_rgbs[2] = strtoul(argv[argi++], NULL, 16);
+                        on_rgbs[3] = strtoul(argv[argi++], NULL, 16);
+                        on_rgbs[4] = strtoul(argv[argi++], NULL, 16);
+                        on_rgbs[5] = strtoul(argv[argi++], NULL, 16);
+                    }
                     else
                     {
-                        char *p;
-                        on_rgbs[0] = strtoul(argv[++args], &p, 16);
+                        fprintf(stderr, "ERR: invalid color.\n");
                     }
                     break;
                 default: // -? is an error
-                    printf("Unrecognised option '%c'\n", argv[args][1]);
+                    printf("ERR: unrecognised option '%c'\n", argv[argi][1]);
                     printf("Options:\n"
-                        "  -n num    number of LEDs per channel\n"\
-                        "  -t        Test mode (flash LEDs)\n"\
+                        "  -t Test mode\n"\
+                        "  -c Set colors\n"\
                         );
                     return(1);
             }
         }
-        // process a color argument, one value per channel FIXME or ???
-        // no color = sets color to zero = led off
-        else if (chan_num < LED_NCHANS
-            && hexdig(argv[args][0]) >= 0 
-            && (n = str_rgb(argv[args], rgb_data, chan_num)) > 0)
+        else
         {
-            chan_ledcount = n > chan_ledcount ? n : chan_ledcount;
-            chan_num++;
+            printf("ERR: no option.");
+            return(1);
         }
     }
 
@@ -185,50 +218,36 @@ int main(int argc, char *argv[])
 
     init_smi(LED_NCHANS>8 ? SMI_16_BITS : SMI_8_BITS, SMI_TIMING);
     map_uncached_mem(&vc_mem, VC_MEM_SIZE);
-
-// #if TX_TEST
-//     oset = oset;
-//     setup_smi_dma(&vc_mem, DMA_CHAN, sizeof(tx_test_data)/sizeof(TXDATA_T));
-// #if LED_NCHANS <= 8
-//     swap_bytes(tx_test_data, sizeof(tx_test_data));
-// #endif
-//     memcpy(txdata, tx_test_data, sizeof(tx_test_data));
-//     start_smi(&vc_mem, DMA_CHAN);
-//     usleep(10);
-//     while (dma_active(DMA_CHAN))
-//         usleep(10);
-// #else
-
     setup_smi_dma(&vc_mem, DMA_CHAN, TX_BUFF_LEN(chan_ledcount));
 
-    printf("%s %u LED%s per channel, %u channels\n", 
-        testmode ? "Testing" : "Setting",
-        chan_ledcount, 
-        chan_ledcount == 1 ? "" : "s", 
+    printf("INFO: %u LED%s per channel, %u channels\n",
+        chan_ledcount,
+        chan_ledcount == 1 ? "" : "s",
         LED_NCHANS
     );
 
     if (setmode)
     {
+        printf("INFO: set colors\n");
+
+        // prepare data
         for (n = 0; n < chan_ledcount; n++)
-        {
-            rgb_txdata(
-                on_rgbs,
-                &tx_buffer[LED_TX_OFFSET(n)]
-            );
-        }
+            rgb_txdata(on_rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
 
 #if LED_NCHANS <= 8
         swap_bytes(tx_buffer, TX_BUFF_SIZE(chan_ledcount));
 #endif
-        // memcpy(dest, srce, size)
-        //memcpy(txdata, tx_buffer, TX_BUFF_SIZE(chan_ledcount));
+
+        // copy buffer - memcpy has alignment issues, use loop instead
         for (int i = 0; i < TX_BUFF_SIZE(chan_ledcount); i++)
             txdata[i] = tx_buffer[i];
 
+        // send data once
         start_smi(&vc_mem, DMA_CHAN);
         usleep(10);
-        while (dma_active(DMA_CHAN)) usleep(10); // don't leave before done!
+        while (dma_active(DMA_CHAN)) usleep(10); // wait until done
+
+        printf("INFO: done\n");
         terminate(0);
         return 0;
     }
@@ -342,7 +361,7 @@ void rgb_txdata(int *rgbs, TXDATA_T *txd)
         }
 
         // advance number of byte or word per bit
-        // (since we do txd[0-2] on each bit, do += 3) 
+        // (since we do txd[0-2] on each bit, do += 3)
         txd += BIT_NPULSES;
     }
 }
