@@ -16,6 +16,7 @@
 #include "rpi/rpi_vc.h"
 #include "rpi/rpi_vm.h"
 #include "rpi/rpi_dma.h"
+#include "rpi/rpi_log.h"
 
 //
 
@@ -86,8 +87,6 @@ int chan_ledcount = CHAN_LEDCOUNT;
 int rgb_data[CHAN_MAXLEDS][LED_NCHANS];
 int chan_num;                           // current channel for data I/P
 
-int verbose;
-
 #define fail(x) {fprintf(stderr, x); terminate(0);}
 
 void terminate(int sig);
@@ -101,8 +100,6 @@ void start_smi(MEM_MAP *mp, int chan);
 void set();
 void set0();
 int dim(int color, int pc);
-
-#define LPRINTF if (verbose) printf
 
 int main(int argc, char *argv[])
 {
@@ -128,7 +125,7 @@ int main(int argc, char *argv[])
             switch (l)
             {
                 case 'V': // -v is verbose mode
-                    verbose = 1;
+                log_verbose(1);
                     break;
                 case 'T': // -t is test mode
                     testmode = 1;
@@ -207,7 +204,7 @@ int main(int argc, char *argv[])
     map_uncached_mem(&vc_mem, VC_MEM_SIZE);
     setup_smi_dma(&vc_mem, DMA_CHAN, TX_BUFF_LEN(chan_ledcount));
 
-    LPRINTF("INFO: %u LED%s per channel, %u channels\n",
+    LOG("INFO: %u LED%s per channel, %u channels\n",
         chan_ledcount,
         chan_ledcount == 1 ? "" : "s",
         LED_NCHANS
@@ -215,16 +212,16 @@ int main(int argc, char *argv[])
 
     if (setmode)
     {
-        LPRINTF("INFO: set colors\n");
+        LOG("INFO: set colors\n");
         set();
-        LPRINTF("INFO: done\n");
+        LOG("INFO: done\n");
         terminate(0);
         return 0;
     }
 
     if (testmode)
     {
-        LPRINTF("INFO: test mode %d\n", testmode);
+        LOG("INFO: test mode %d\n", testmode);
 
         int orange = dim(COLOR_ORANGE, 20);
 
@@ -294,7 +291,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    LPRINTF("INFO: done\n");
+    LOG("INFO: done\n");
     terminate(0);
     return(0);
 }
@@ -464,7 +461,7 @@ void terminate(int sig)
 {
     int i;
 
-    LPRINTF("closing\n");
+    LOG("closing\n");
     if (gpio_regs.virt)
     {
         for (i=0; i<LED_NCHANS; i++)
