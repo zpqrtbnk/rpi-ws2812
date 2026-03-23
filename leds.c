@@ -88,7 +88,7 @@ int chan_num;                           // current channel for data I/P
 
 int verbose;
 
-#define fail(x) {fprintf(stderror, x); terminate(0);}
+#define fail(x) {fprintf(stderr, x); terminate(0);}
 
 void terminate(int sig);
 
@@ -278,11 +278,11 @@ int main(int argc, char *argv[])
                 for (int i = 3; i < 6; i++) rgbs[i] = green;
 
                 c = b;
-                while (c => 0)
+                while (c >= 0)
                 {
                     for (int n = 0; n < chan_ledcount; n++)
                     {
-                        int color = ((n+(b-r)) % b) > c ? COLOR_BLACK : green;
+                        int color = ((n+(b-r_bot)) % b) > c ? COLOR_BLACK : green;
                         rgbs[5] = color;
                         rgb_txdata(rgbs, &tx_buffer[LED_TX_OFFSET(n)]);
                     }
