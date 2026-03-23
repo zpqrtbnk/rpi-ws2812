@@ -12,6 +12,7 @@
 
 #include "rpi_lib.h"
 #include "rpi_dma.h"
+#include "rpi_log.h"
 
 MEM_MAP dma_regs;
 
@@ -20,7 +21,7 @@ char *dma_regstrs[] = {"DMA CS", "CB_AD", "TI", "SRCE_AD", "DEST_AD",
 
 void *map_dma() {
     if (map_periph(&dma_regs, (void *)DMA_BASE, PAGE_SIZE) == 0)
-        printf("error: failed to map dma registers\n");
+        ERR("error: failed to map dma registers\n");
     return dma_regs.virt;
 }
 
@@ -32,28 +33,28 @@ void unmap_dma() {
 // Enable and reset DMA
 void enable_dma(int chan)
 {
-    debug("dma chan=%d enable", chan);
+    LOG("dma chan=%d enable", chan);
     *REG32(dma_regs, DMA_ENABLE) |= (1 << chan);
     *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 1 << 31;
-    debug(" -> enabled\n");
+    LOG(" -> enabled\n");
 }
 
 // Start DMA, given first control block
 void start_dma(MEM_MAP *mp, int chan, DMA_CB *cbp, uint32_t csval)
 {
-    debug("dma chan=%d start", chan);
+    LOG("dma chan=%d start", chan);
     *REG32(dma_regs, DMA_REG(chan, DMA_CONBLK_AD)) = MEM_BUS_ADDR(mp, cbp);
     *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 2;        // Clear 'end' flag
     *REG32(dma_regs, DMA_REG(chan, DMA_DEBUG)) = 7;     // Clear error bits
     *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 1|csval;  // Start DMA
-    debug(" -> started\n");
+    LOG(" -> started\n");
 }
 
 // Return remaining transfer length
 uint32_t dma_transfer_len(int chan)
 {
     uint32_t val = *REG32(dma_regs, DMA_REG(chan, DMA_TXFR_LEN));
-    debug("dma chan=%d remain=%d\n", chan, val);
+    LOG("dma chan=%d remain=%d\n", chan, val);
     return val;
 }
 
@@ -61,17 +62,17 @@ uint32_t dma_transfer_len(int chan)
 uint32_t dma_active(int chan)
 {
     uint32_t val = (*REG32(dma_regs, DMA_REG(chan, DMA_CS))) & 1;
-    debug("dma chan=%d active=%d\n", chan, val);
+    LOG("dma chan=%d active=%d\n", chan, val);
     return val;
 }
 
 // Halt current DMA operation by resetting controller
 void stop_dma(int chan)
 {
-    debug("dma chan=%d stop", chan);
+    LOG("dma chan=%d stop", chan);
     if (dma_regs.virt)
         *REG32(dma_regs, DMA_REG(chan, DMA_CS)) = 1 << 31;
-    debug(" -> stopped\n");
+    LOG(" -> stopped\n");
 }
 
 // Display DMA registers
@@ -82,9 +83,9 @@ void disp_dma(int chan)
 
     while (dma_regstrs[i][0])
     {
-        printf("%-7s %08X ", dma_regstrs[i++], *p++);
+        LOG("%-7s %08X ", dma_regstrs[i++], *p++);
         if (i%5==0 || dma_regstrs[i][0]==0)
-            printf("\n");
+            LOG("\n");
     }
 }
 

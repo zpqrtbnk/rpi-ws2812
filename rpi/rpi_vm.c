@@ -12,6 +12,7 @@
 
 #include "rpi_lib.h"
 #include "rpi_vm.h"
+#include "rpi_log.h"
 
 // Get virtual memory segment for peripheral regs or physical mem
 void *map_segment(void *addr, int size)
@@ -20,12 +21,12 @@ void *map_segment(void *addr, int size)
     void *mem;
 
     size = PAGE_ROUNDUP(size);
-    debug("mapping %d at %p", size, (void *)addr);
+    LOG("mapping %d at %p", size, (void *)addr);
 
     if ((fd = open ("/dev/mem", O_RDWR|O_SYNC|O_CLOEXEC)) < 0)
     {
-        debug("\n");
-        printf("error: can't open /dev/mem, are you root?\n");
+        LOG("\n");
+        ERR("error: can't open /dev/mem, are you root?\n");
         return 0;
     }
 
@@ -42,12 +43,12 @@ void *map_segment(void *addr, int size)
 
     if (mem == MAP_FAILED)
     {
-        debug("\n");
-        printf("error: failed to map memory\n");
+        LOG("\n");
+        ERR("error: failed to map memory\n");
         return 0;
     }
 
-    debug(" -> %p\n", mem);
+    LOG(" -> %p\n", mem);
 
     return mem;
 }

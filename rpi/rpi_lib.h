@@ -49,18 +49,11 @@
 #elif WHAT_PI == PI_Z2
 #define PHYS_REG_BASE 0x3F000000
 #define CLOCK_HZ      250000000
-#elif WHAT_PI == PI_4 
+#elif WHAT_PI == PI_4
 #define PHYS_REG_BASE 0xFE000000
 #define CLOCK_HZ      250000000
 #else
 #error "What PI?"
-#endif
-
-// Debug statements
-#if DEBUG
-#define debug printf
-#else
-#define debug(...)
 #endif
 
 // Location of peripheral registers in bus memory

@@ -12,6 +12,7 @@
 
 #include "rpi_lib.h"
 #include "rpi_smi.h"
+#include "rpi_log.h"
 
 MEM_MAP smi_regs;
 
@@ -29,7 +30,7 @@ volatile SMI_DCD_REG *smi_dcd;
 
 void *map_smi() {
     if (map_periph(&smi_regs, (void *)SMI_BASE, PAGE_SIZE) == 0)
-        printf("error: failed to map smi registers\n");
+        ERR("error: failed to map smi registers\n");
     return smi_regs.virt;
 }
 

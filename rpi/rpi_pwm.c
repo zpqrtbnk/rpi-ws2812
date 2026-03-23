@@ -12,12 +12,13 @@
 
 #include "rpi_lib.h"
 #include "rpi_pwm.h"
+#include "rpi_log.h"
 
 MEM_MAP pwm_regs, clk_regs;
 
 void *map_pwm() {
     if (map_periph(&pwm_regs, (void *)PWM_BASE, PAGE_SIZE) == 0)
-        printf("error: failed to map pwm registers\n");
+        ERR("error: failed to map pwm registers\n");
     return pwm_regs.virt;
 }
 
@@ -28,7 +29,7 @@ void unmap_pwm() {
 
 void *map_clk() {
     if (map_periph(&clk_regs, (void *)CLK_BASE, PAGE_SIZE) == 0)
-        printf("error: failed to map clk registers\n");
+        ERR("error: failed to map clk registers\n");
     return clk_regs.virt;
 }
 
@@ -43,7 +44,7 @@ void init_pwm(int freq, int range, int val)
     stop_pwm();
     if (*REG32(pwm_regs, PWM_STA) & 0x100)
     {
-        printf("PWM bus error\n");
+        ERR("PWM bus error\n");
         *REG32(pwm_regs, PWM_STA) = 0x100;
     }
 #if USE_VC_CLOCK_SET

@@ -12,6 +12,7 @@
 
 #include "rpi_lib.h"
 #include "rpi_vc.h"
+#include "rpi_log.h"
 
 // Open mailbox interface, return file descriptor
 int open_mbox(void)
@@ -20,7 +21,7 @@ int open_mbox(void)
 
    if ((fd = open("/dev/vcio", 0)) < 0)
    {
-       printf("error: can't open VC mailbox\n");
+       ERR("error: can't open VC mailbox\n");
    }
    return fd;
 }
@@ -42,16 +43,16 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp)
     msgp->len = (msgp->blen + 6) * 4;
     msgp->req = 0;
     if (ioctl(fd, _IOWR(100, 0, void *), msgp) < 0)
-        printf("warn: VC IOCTL failed\n");
+        ERR("warn: VC IOCTL failed\n");
     else if ((msgp->req&0x80000000) == 0)
-        printf("warn: VC IOCTL error\n");
+        ERR("warn: VC IOCTL error\n");
     else if (msgp->req == 0x80000001)
-        printf("warn: VC IOCTL partial error\n");
+        ERR("warn: VC IOCTL partial error\n");
     else
         ret = msgp->uints[0];
-		
+
 #if DEBUG
-    printf("msg mbox: ");
+    LOG("msg mbox: ");
     disp_vc_msg(msgp);
 #endif
 
@@ -61,7 +62,7 @@ uint32_t msg_mbox(int fd, VC_MSG *msgp)
 // Allocate memory on PAGE_SIZE boundary, return handle
 uint32_t alloc_vc_mem(int fd, uint32_t size, VC_ALLOC_FLAGS flags)
 {
-    debug("alloc vc mem\n");
+    LOG("alloc vc mem\n");
     VC_MSG msg = {
         .tag  = 0x3000c,
         .blen = 12,
@@ -78,7 +79,7 @@ uint32_t alloc_vc_mem(int fd, uint32_t size, VC_ALLOC_FLAGS flags)
 // Lock allocated memory, return bus address
 void *lock_vc_mem(int fd, int h)
 {
-    debug("lock vc mem\n");
+    LOG("lock vc mem\n");
     VC_MSG msg = {
 		.tag  = 0x3000d,
         .blen = 4,
@@ -98,7 +99,7 @@ void *lock_vc_mem(int fd, int h)
 // Unlock allocated memory
 uint32_t unlock_vc_mem(int fd, int h)
 {
-    debug("unlock vc mem\n");
+    LOG("unlock vc mem\n");
     VC_MSG msg = {
         .tag  = 0x3000e,
         .blen = 4,
@@ -113,7 +114,7 @@ uint32_t unlock_vc_mem(int fd, int h)
 // Free memory
 uint32_t free_vc_mem(int fd, int h)
 {
-    debug("free vc mem\n");
+    LOG("free vc mem\n");
     VC_MSG msg = {
         .tag  = 0x3000f,
         .blen = 4,
@@ -159,11 +160,11 @@ void disp_vc_msg(VC_MSG *msgp)
 {
     int i;
 
-    printf("VC msg len=%X, req=%X, tag=%X, blen=%x, dlen=%x, data ",
+    LOG("VC msg len=%X, req=%X, tag=%X, blen=%x, dlen=%x, data ",
         msgp->len, msgp->req, msgp->tag, msgp->blen, msgp->dlen);
     for (i=0; i<msgp->blen/4; i++)
-        printf("%08X ", msgp->uints[i]);
-    printf("\n");
+        LOG("%08X ", msgp->uints[i]);
+    LOG("\n");
 }
 
 // Allocate uncached memory, get bus & phys addresses
@@ -176,7 +177,7 @@ void *map_uncached_mem(MEM_MAP *mp, int size)
         (mp->bus = lock_vc_mem(mp->fd, mp->h)) != 0 &&
         (mp->virt = map_segment(BUS_PHYS_ADDR(mp->bus), mp->size)) != 0
         ? mp->virt : 0;
-    printf("VC mem handle %u, phys %p, virt %p\n", mp->h, mp->bus, mp->virt);
+    LOG("VC mem handle %u, phys %p, virt %p\n", mp->h, mp->bus, mp->virt);
     return ret;
 }
 
